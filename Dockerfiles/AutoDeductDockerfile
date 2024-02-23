@@ -1,0 +1,140 @@
+# syntax=docker/dockerfile:1
+##
+# Stage 1 - Base image and packages
+#
+# NOTE: We start with Ubuntu instead of e.g. Alpine because
+#   Frama-C under Alpine does not fully support E-ACSL.
+#
+FROM ubuntu:22.04 as auto-deduct-base
+
+ARG CERT="./cert/scania-it-tls-inspect-root.crt"
+ARG CERT_LOC="/usr/local/share/ca-certificates/"
+
+ARG PROXY_HOST=""
+ARG PROXY_PORT=""
+
+# bash - used by "sbt" (Scala build tool)
+# clang - used by Tricera-pp
+# ca-certificates - trusted certificates management (see below)
+# curl - to download coursier (Scala install tool)
+# ocaml - used by Frama-C plugins
+# opam - ocaml package manager
+# openjdk - used by Scala
+# + a bunch of other libraries required by Frama-C
+RUN apt-get update && \
+  apt-get install \
+    ca-certificates \
+    curl \
+    graphviz \
+    libcairo2-dev \
+    libexpat1-dev \
+    libgmp-dev \
+    libgtk-3-dev \
+    libgtksourceview-3.0-dev \
+    pkg-config \
+    zlib1g-dev \
+    ocaml \
+    opam \
+    openjdk-21-jdk \
+    sudo \
+    --yes
+
+# autoconf
+
+# Scania has implemented TLS inspection/scanning (replacing certificates)
+# in the proxy. Therefore we need the scania root certificate among the
+# trusted root certificates. Otherwise, tools like curl won't work when
+# we are behind the proxy.
+COPY ${CERT} ${CERT_LOC}
+
+RUN update-ca-certificates && \
+  keytool \
+  -import \
+  -noprompt \
+  -trustcacerts \
+  -alias ScaniaItTlsInspectRoot \
+  -file "${CERT_LOC}scania-it-tls-inspect-root.crt" \
+  -storepass changeit \
+  -cacerts
+
+# Set up a new user in the container
+RUN  adduser --disabled-password --shell /usr/bin/bash --uid 1000 --gecos "Development user" dev && \
+  echo "dev:dev" | chpasswd && \
+  usermod -aG sudo dev
+
+
+##
+# Stage 2 - Add Frama-C related stuff
+#
+FROM auto-deduct-base as auto-deduct-frama-c
+
+USER dev
+WORKDIR /home/dev
+
+RUN opam init --disable-sandboxing --yes && \
+  opam init --shell-setup && \
+  opam install frama-c --yes && \
+  opam clean
+
+
+##
+# Stage 3 - Add Scala related stuff
+#
+FROM auto-deduct-frama-c as auto-deduct-scala
+
+USER dev
+WORKDIR /home/dev
+
+# NOTE: For some reason JAVA needs to be told that it is working
+#   behind a proxy.
+RUN curl -fLo coursierLauncher https://github.com/coursier/launchers/raw/master/coursier && \
+  if [ "${PROXY_HOST}" != "" -a "${PROXY_PORT}" != "" ]; then \
+    java -Dhttps.proxyHost=${PROXY_HOST} -Dhttps.proxyPort=${PROXY_PORT} -jar coursierLauncher setup --yes; \
+  else \
+    java -jar coursierLauncher setup --yes; \
+  fi && \
+  rm coursierLauncher
+
+
+##
+# Stage 4 - Add TriCera codebase and compile
+# 
+# NOTE: We change the version of sbt build properties in order
+#   avoid a deprecation error. 
+#  (java.lang.UnsupportedOperationException: The Security Manager
+#   is deprecated and will be removed in a future release)
+#
+FROM auto-deduct-scala as auto-deduct-tricera
+WORKDIR /home/dev/repos
+RUN . /home/dev/.profile && \
+  git clone https://github.com/uuverifiers/tricera.git && \
+  cd tricera && \
+  sed -i -e "s/1.4.0/1.9.8/" project/build.properties && \
+  sbt assembly
+
+WORKDIR /home/dev/.local/bin
+RUN cd /home/dev/.local/bin && \
+  ln -s /home/dev/repos/tricera/tri && \
+  ln -s /home/dev/repos/tricera/tri-pp && \
+  ln -s /home/dev/repos/tricera/tri-client
+
+##
+# Stage 5 - Add AutoDeduct Frama-C plugins
+#
+# NOTE: ISP (Interface Specification Propagator) is currently a
+#   private GitHub project. You will have to download and install
+#   it after the container image has been built.
+#
+FROM auto-deduct-tricera as auto-deduct-toolchain
+WORKDIR /home/dev/repos
+RUN . /home/dev/.profile && \
+  git clone https://github.com/rse-verification/saida.git && \
+  cd saida && \
+  dune build @install && \
+  dune install
+
+WORKDIR /home/dev
+
+# Enable use of Xserver on docker host
+ENV DISPLAY=host.docker.internal:0.0
+CMD exec /usr/bin/bash -l
