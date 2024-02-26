@@ -1,12 +1,12 @@
-# toolchain
+# auto-deduct-toolchain
 
 This is a project for composing a formal verification toolchain using
 TriCera, Frama-C and custom Frama-C plug-ins.
 
-The development environment and toolchain is provided in as a docker
-container.
+The development environment and toolchain is provided as a docker
+image.
 
-## Building the docker container
+## Building the docker image
 
 In the examples we are using bash, but the syntax should be similar
 in your command line shell of choice.
