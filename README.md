@@ -27,7 +27,7 @@ cd toolchain/Dockerfiles
 docker build -t auto-deduct:0.1.0 -t auto-deduct:latest -f DevEnvDockerfile .
 
 # Use the follwing behind a proxy
-docker build --build-arg PROXY_HOST=<your.proxy.name> --build-arg PROXY_PORT=<port> -t auto-deduct:0.1.0 -t auto-deduct:latest -f DevEnvDockerfile .
+docker build --build-arg PROXY_HOST=<your.proxy.name> --build-arg PROXY_PORT=<port> -t auto-deduct:0.1.0 -t auto-deduct:latest -f AutoDeductDockerfile .
 ```
 
 Please note that building the container can take quite a while since

@@ -23,6 +23,7 @@ ARG PROXY_PORT=""
 # + a bunch of other libraries required by Frama-C
 RUN apt-get update && \
   apt-get install \
+    autoconf \
     ca-certificates \
     curl \
     graphviz \
@@ -37,9 +38,8 @@ RUN apt-get update && \
     opam \
     openjdk-21-jdk \
     sudo \
+    yaru-theme-icon \
     --yes
-
-# autoconf
 
 # Scania has implemented TLS inspection/scanning (replacing certificates)
 # in the proxy. Therefore we need the scania root certificate among the
@@ -66,6 +66,9 @@ RUN  adduser --disabled-password --shell /usr/bin/bash --uid 1000 --gecos "Devel
 ##
 # Stage 2 - Add Frama-C related stuff
 #
+# NOTE: We use version 27.1 of Frama-C  since the ISP-plugin
+#  (interface specification propagator) requires API that are
+#  deprecated in version 28.
 FROM auto-deduct-base as auto-deduct-frama-c
 
 USER dev
@@ -73,7 +76,7 @@ WORKDIR /home/dev
 
 RUN opam init --disable-sandboxing --yes && \
   opam init --shell-setup && \
-  opam install frama-c --yes && \
+  opam install frama-c.27.1 --yes && \
   opam clean
 
 
