@@ -24,7 +24,7 @@ git clone https://github.com/rse-verification/toolchain.git
 cd toolchain/Dockerfiles
 
 # Use the following for normal builds
-docker build -t auto-deduct:0.1.0 -t auto-deduct:latest -f DevEnvDockerfile .
+docker build -t auto-deduct:0.1.0 -t auto-deduct:latest -f AutoDeductDockerfile .
 
 # Use the follwing behind a proxy
 docker build --build-arg PROXY_HOST=<your.proxy.name> --build-arg PROXY_PORT=<port> -t auto-deduct:0.1.0 -t auto-deduct:latest -f AutoDeductDockerfile .
