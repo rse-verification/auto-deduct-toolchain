@@ -108,6 +108,9 @@ RUN curl -fLo coursierLauncher https://github.com/coursier/launchers/raw/master/
 #   is deprecated and will be removed in a future release)
 #
 FROM auto-deduct-scala as auto-deduct-tricera
+USER dev
+WORKDIR /home/dev
+RUN mkdir repos
 WORKDIR /home/dev/repos
 RUN . /home/dev/.profile && \
   git clone https://github.com/uuverifiers/tricera.git && \
@@ -115,7 +118,8 @@ RUN . /home/dev/.profile && \
   sed -i -e "s/1.4.0/1.9.8/" project/build.properties && \
   sbt assembly
 
-WORKDIR /home/dev/.local/bin
+WORKDIR /home/dev/.local/
+RUN mkdir bin
 RUN cd /home/dev/.local/bin && \
   ln -s /home/dev/repos/tricera/tri && \
   ln -s /home/dev/repos/tricera/tri-pp && \
