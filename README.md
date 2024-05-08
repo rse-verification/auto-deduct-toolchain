@@ -97,9 +97,13 @@ As long as you are running a GUI in your GNU/Linux distribution
 chances are very high that you already have a server installed.
 (There are two systems for GUIs on GNU/Linux, the X Window System
 provided by X.Org Server, and Wayland. If you are running Wayland
-chances are pretty high that you have some copatibility solution
-installed.) If the Frama-C GUI doesn't work out-of-the-box it is
-beyond this README to solve the problem.
+chances are pretty high that you have some compatibility solution
+installed.) However, in order use your host's X server, you
+need start your container with additional arguments
+
+```shell
+docker run -it --env DISPLAY=$DISPLAY --volume /tmp/.X11-unix:/tmp/.X11-unix
+```
 
 ### On Mac
 
