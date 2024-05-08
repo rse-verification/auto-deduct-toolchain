@@ -91,6 +91,12 @@ start the Frama-C GUI from the command line.
 frama-c-gui
 ```
 
+However, if you use the image as a devcontainer for Visual Studio
+Code (VSCode), and run the GUI from a terminal inside VSCode,
+VSCode integrates with WSL. WSL already has support for Wayland
+and therefore there is no need for an extra X-server.
+
+
 ### On Linux
 
 As long as you are running a GUI in your GNU/Linux distribution
