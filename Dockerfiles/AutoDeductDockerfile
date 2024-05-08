@@ -13,19 +13,34 @@ ARG CERT_LOC="/usr/local/share/ca-certificates/"
 ARG PROXY_HOST=""
 ARG PROXY_PORT=""
 
+ARG FRAMA_C_VER="27.1"
+ARG TRICERA_VER="v0.3"
+
 # bash - used by "sbt" (Scala build tool)
 # clang - used by Tricera-pp
 # ca-certificates - trusted certificates management (see below)
 # curl - to download coursier (Scala install tool)
+# cvc4 - SMT solver for use by Frama-C
 # ocaml - used by Frama-C plugins
 # opam - ocaml package manager
 # openjdk - used by Scala
+# Z3 - SMT solver for use by Frama-C
 # + a bunch of other libraries required by Frama-C
+#
+# Note: We install two different icon themes. For some reason,
+#  when running GTK-applications, like Frama-C GUI, inside a
+#  devcontainer in Visual Studio Code the system is using one
+#  setup, and when running from a docker container directly,
+#  it is using another setup. #  It seems to have to do with
+#  Visual Studio Code setting up the XDG_RUNTIME_DIR environment
+#  variable.
 RUN apt-get update && \
   apt-get install \
+    adwaita-icon-theme-full \
     autoconf \
     ca-certificates \
     curl \
+    cvc4 \
     graphviz \
     libcairo2-dev \
     libexpat1-dev \
@@ -39,6 +54,7 @@ RUN apt-get update && \
     openjdk-21-jdk \
     sudo \
     yaru-theme-icon \
+    z3 \
     --yes
 
 # Scania has implemented TLS inspection/scanning (replacing certificates)
@@ -76,9 +92,8 @@ WORKDIR /home/dev
 
 RUN opam init --disable-sandboxing --yes && \
   opam init --shell-setup && \
-  opam install frama-c.27.1 --yes && \
+  opam install "frama-c.${FRAMA_C_VER}" --yes && \
   opam clean
-
 
 ##
 # Stage 3 - Add Scala related stuff
@@ -108,20 +123,18 @@ RUN curl -fLo coursierLauncher https://github.com/coursier/launchers/raw/master/
 #   is deprecated and will be removed in a future release)
 #
 FROM auto-deduct-scala as auto-deduct-tricera
+
 USER dev
-WORKDIR /home/dev
-RUN mkdir repos
 WORKDIR /home/dev/repos
+
 RUN . /home/dev/.profile && \
-  git clone https://github.com/uuverifiers/tricera.git && \
+  git clone --depth 1 --branch "${TRICERA_VER}" https://github.com/uuverifiers/tricera.git && \
   cd tricera && \
   sed -i -e "s/1.4.0/1.9.8/" project/build.properties && \
   sbt assembly
 
-WORKDIR /home/dev/.local/
-RUN mkdir bin
-RUN cd /home/dev/.local/bin && \
-  ln -s /home/dev/repos/tricera/tri && \
+WORKDIR /home/dev/.local/bin
+RUN ln -s /home/dev/repos/tricera/tri && \
   ln -s /home/dev/repos/tricera/tri-pp && \
   ln -s /home/dev/repos/tricera/tri-client
 
@@ -133,12 +146,16 @@ RUN cd /home/dev/.local/bin && \
 #   it after the container image has been built.
 #
 FROM auto-deduct-tricera as auto-deduct-toolchain
+
+USER dev
 WORKDIR /home/dev/repos
+
 RUN . /home/dev/.profile && \
   git clone https://github.com/rse-verification/saida.git && \
   cd saida && \
   dune build @install && \
-  dune install
+  dune install && \
+  why3 config detect
 
 WORKDIR /home/dev
 
