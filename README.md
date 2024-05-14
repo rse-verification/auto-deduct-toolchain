@@ -6,6 +6,15 @@ TriCera, Frama-C and custom Frama-C plug-ins.
 The development environment and toolchain is provided as a docker
 image.
 
+## Designed with VSCode in mind
+
+While not at all nececassry for using the image, it is designed with
+Visual Studio Code in mind, and more specifically using it as a container
+for [remote development](https://code.visualstudio.com/docs/remote/remote-overview)
+in VSCode. An example/template of a
+[devcontainer configuration](https://code.visualstudio.com/docs/devcontainers/containers)
+can be found in this repository, in `.devcontainer/devcontainer.json`.
+
 ## Building the docker image
 
 In the examples we are using bash, but the syntax should be similar
