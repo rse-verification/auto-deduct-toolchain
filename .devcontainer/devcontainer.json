@@ -1,0 +1,35 @@
+{
+   "name": "AutoDeduct",
+   "image": "auto-deduct:0.1.0",
+   "remoteUser": "dev",
+   "containerEnv": {
+      "GITHUB_TOKEN": "${localEnv:GITHUB_TOKEN}",
+      "GITHUB_USER": "${localEnv:GITHUB_USER}",
+      // The following makes sure that certificates inside the container
+      // is considered e.g. when installing vscode extensions on container
+      // startup.
+      "NODE_EXTRA_CA_CERTS":"/etc/ssl/certs/ca-certificates.crt"
+   },
+   "runArgs": [
+      "--init",
+      "--cap-add=SYS_PTRACE",
+      "--cap-add=SYS_NICE",
+      "--cap-add=NET_ADMIN",
+      "--security-opt",
+      "seccomp=unconfined"
+   ],
+   "customizations": {
+      // Configure properties specific to VS Code.
+      "vscode": {
+         "extensions": [
+            // Add the identifiers of the extensions you want installed.
+            // Extension identifiers can be fount in the marketplace. 
+//           "llvm-vs-code-extensions.vscode-clangd",
+         ]
+      }
+   },
+   "mounts": [
+      // Additional mounts besides the directory you are starting VSCode from.
+//      "source=docker_conan,target=/home/.conan/data,type=volume,consistency=cached"
+   ]
+}
