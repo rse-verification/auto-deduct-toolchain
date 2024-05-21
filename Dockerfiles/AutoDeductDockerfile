@@ -14,8 +14,11 @@ ARG PROXY_HOST=""
 ARG PROXY_PORT=""
 
 ARG FRAMA_C_VER="27.1"
-ARG TRICERA_VER="v0.3"
 ARG SAIDA_VER="v0.1.0"
+# ARG TRICERA_VER="v0.3"
+# This is a workaround until TriCera gets more regular commits.
+ARG TRICERA_COMMIT="2736b6c79cdd12947b43311f015ca80a8ab9351f"
+
 
 # bash - used by "sbt" (Scala build tool)
 # clang - used by Tricera-pp
@@ -130,8 +133,9 @@ USER dev
 WORKDIR /home/dev/repos
 
 RUN . /home/dev/.profile && \
-  git clone --depth 1 --branch "${TRICERA_VER}" https://github.com/uuverifiers/tricera.git && \
+  git clone https://github.com/uuverifiers/tricera.git && \
   cd tricera && \
+  git checkout "${TRICERA_COMMIT}" && \
   sed -i -e "s/1.4.0/1.9.8/" project/build.properties && \
   sbt assembly
 
