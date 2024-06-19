@@ -15,6 +15,7 @@ ARG PROXY_PORT=""
 
 ARG FRAMA_C_VER="27.1"
 ARG SAIDA_VER="v0.1.0"
+ARG ISP_VER="v0.1.0"
 # ARG TRICERA_VER="v0.3"
 # This is a workaround until TriCera gets more regular commits.
 ARG TRICERA_COMMIT="2736b6c79cdd12947b43311f015ca80a8ab9351f"
@@ -162,6 +163,12 @@ RUN . /home/dev/.profile && \
   dune build @install && \
   dune install && \
   why3 config detect
+
+RUN . /home/dev/.profile && \
+  git clone --depth 1 --branch "${ISP_VER}" https://github.com/rse-verification/interface-specification-propagator.git && \
+  cd interface-specification-propagator && \
+  dune build @install && \
+  dune install
 
 WORKDIR /home/dev
 
