@@ -1,4 +1,23 @@
 # syntax=docker/dockerfile:1
+
+# Copyright 2024 Scania CV AB
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+#  SPDX-License-Identifier: GPL-2.0+
+
 ##
 # Stage 1 - Base image and packages
 #
@@ -14,11 +33,11 @@ ARG PROXY_HOST=""
 ARG PROXY_PORT=""
 
 ARG FRAMA_C_VER="27.1"
-ARG SAIDA_VER="v0.1.0"
+ARG SAIDA_VER="v0.1.1"
 ARG ISP_VER="v0.1.0"
 # ARG TRICERA_VER="v0.3"
 # This is a workaround until TriCera gets more regular commits.
-ARG TRICERA_COMMIT="2736b6c79cdd12947b43311f015ca80a8ab9351f"
+ARG TRICERA_COMMIT="d1e803f52623e9c5535076ba4790d37b46403695"
 
 
 # bash - used by "sbt" (Scala build tool)
