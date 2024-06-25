@@ -3,8 +3,9 @@
 This is a project for composing a formal verification toolchain using
 TriCera, Frama-C and custom Frama-C plug-ins.
 
-The development environment and toolchain is provided as a docker
-image.
+The development environment and toolchain is provided as a Dockerfile
+under the GNU GPLv2 license. For full license conditions, please see
+the [LICENSE](LICENSE) file
 
 ## Designed with VSCode in mind
 
@@ -61,8 +62,10 @@ Apart from Scala (used by TriCera) and Frama-C things installed under
   The plugin is built and installed as an OCAML package as part of
   the container build.
 
-* Since the source for the `ISP` (Interface Specification Propagator)
-  is private, you will have to clone and build the project yourself.
+* `/home/dev/repos/interface-specification-propagator` - Source code
+  for the the [ISP (Interface Specification Propagator)](https://github.com/rse-verification/interface-specification-propagator) Frama-C plugin.
+  The plugin is built and installed as an OCAML package as part of
+  the container build.
 
   ```shell
   cd /home/dev/repos
@@ -104,7 +107,6 @@ However, if you use the image as a devcontainer for Visual Studio
 Code (VSCode), and run the GUI from a terminal inside VSCode,
 VSCode integrates with WSL. WSL already has support for Wayland
 and therefore there is no need for an extra X-server.
-
 
 ### On Linux
 
