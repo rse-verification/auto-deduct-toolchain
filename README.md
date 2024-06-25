@@ -67,14 +67,6 @@ Apart from Scala (used by TriCera) and Frama-C things installed under
   The plugin is built and installed as an OCAML package as part of
   the container build.
 
-  ```shell
-  cd /home/dev/repos
-  git clone https://github.com/rse-verification/interface-specification-propagator.git
-  cd interface-specification-propagator
-  dune build @install
-  dune install
-  ```
-
 ## Starting the container
 
 Once you have built the container, you can start it
