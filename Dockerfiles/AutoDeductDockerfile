@@ -39,6 +39,10 @@ ARG ISP_VER="v0.1.0"
 # This is a workaround until TriCera gets more regular commits.
 ARG TRICERA_COMMIT="d1e803f52623e9c5535076ba4790d37b46403695"
 
+#### Copy in some case study files ######
+COPY files/stee.c /home/dev/stee.c
+COPY --chmod=755 scripts/infer_and_verify.sh /home/dev/infer_and_verify.sh
+
 
 # bash - used by "sbt" (Scala build tool)
 # clang - used by Tricera-pp
@@ -141,9 +145,9 @@ RUN curl -fLo coursierLauncher https://github.com/coursier/launchers/raw/master/
 
 ##
 # Stage 4 - Add TriCera codebase and compile
-# 
+#
 # NOTE: We change the version of sbt build properties in order
-#   avoid a deprecation error. 
+#   avoid a deprecation error.
 #  (java.lang.UnsupportedOperationException: The Security Manager
 #   is deprecated and will be removed in a future release)
 #
