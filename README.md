@@ -67,6 +67,10 @@ Apart from Scala (used by TriCera) and Frama-C things installed under
   The plugin is built and installed as an OCAML package as part of
   the container build.
 
+* `/home/dev/repos/auto-deduct-examples` - Some helper scripts, and
+  [a set of examples](https://github.com/rse-verification/auto-deduct-examples)
+  on which the toolchain has been tested in practice.
+
 ## Starting the container
 
 Once you have built the container, you can start it
