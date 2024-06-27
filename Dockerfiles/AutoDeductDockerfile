@@ -189,6 +189,9 @@ RUN . /home/dev/.profile && \
   dune build @install && \
   dune install
 
+RUN . /home/dev/.profile && \
+  git clone --depth 1 https://github.com/rse-verification/auto-deduct-examples.git
+
 WORKDIR /home/dev
 
 # Enable use of Xserver on docker host
