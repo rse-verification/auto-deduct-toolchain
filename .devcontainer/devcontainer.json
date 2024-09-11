@@ -1,6 +1,6 @@
 {
    "name": "AutoDeduct",
-   "image": "auto-deduct:0.1.0",
+   "image": "auto-deduct:0.1.0-beta.8",
    "remoteUser": "dev",
    "containerEnv": {
       "GITHUB_TOKEN": "${localEnv:GITHUB_TOKEN}",

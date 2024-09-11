@@ -24,7 +24,7 @@
 # NOTE: We start with Ubuntu instead of e.g. Alpine because
 #   Frama-C under Alpine does not fully support E-ACSL.
 #
-FROM ubuntu:22.04 as auto-deduct-base
+FROM ubuntu:24.04 as auto-deduct-base
 
 ARG CERT="./cert/scania-it-tls-inspect-root.crt"
 ARG CERT_LOC="/usr/local/share/ca-certificates/"
@@ -32,13 +32,15 @@ ARG CERT_LOC="/usr/local/share/ca-certificates/"
 ARG PROXY_HOST=""
 ARG PROXY_PORT=""
 
-ARG FRAMA_C_VER="28.1"
-ARG SAIDA_VER="v0.1.1"
-ARG ISP_VER="v0.2.0"
-# ARG TRICERA_VER="v0.3"
+ARG FRAMA_C_VER="29.0"
+ARG SAIDA_VER="v0.2.0"
+ARG ISP_VER="v0.3.0"
+ARG TRICERA_VER="v0.3.1"
 # This is a workaround until TriCera gets more regular commits.
-ARG TRICERA_COMMIT="d1e803f52623e9c5535076ba4790d37b46403695"
+# ARG TRICERA_COMMIT="d1e803f52623e9c5535076ba4790d37b46403695"
 
+# This is the user id of "dev" user that will be created in the container
+ARG UID="2000"
 
 # bash - used by "sbt" (Scala build tool)
 # clang - used by Tricera-pp
@@ -99,7 +101,7 @@ RUN update-ca-certificates && \
   -cacerts
 
 # Set up a new user in the container
-RUN  adduser --disabled-password --shell /usr/bin/bash --uid 1000 --gecos "Development user" dev && \
+RUN  adduser --disabled-password --shell /usr/bin/bash --uid ${UID} --gecos "Development user" dev && \
   echo "dev:dev" | chpasswd && \
   usermod -aG sudo dev
 
@@ -153,7 +155,7 @@ WORKDIR /home/dev/repos
 RUN . /home/dev/.profile && \
   git clone https://github.com/uuverifiers/tricera.git && \
   cd tricera && \
-  git checkout "${TRICERA_COMMIT}" && \
+  git checkout "${TRICERA_VER}" && \
   sed -i -e "s/1.4.0/1.9.8/" project/build.properties && \
   sbt assembly
 
