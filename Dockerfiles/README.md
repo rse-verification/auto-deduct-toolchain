@@ -61,10 +61,8 @@ by the functional inference part may also be of interest, it will be stored in:
 
 # Artifact Organisation
 The organisation of the software and examples in the Docker image is as follows
-         * ~/repos/saida: Contains the Frama-C plugin responsible for the 'functional
-           contract inference'
-         * ~/repos/interface-specification-propagator: contains the software responsible
-            for the 'auxiliary contract inference'
+         * ~/repos/saida: Contains the Frama-C plugin responsible for the 'functional contract inference'
+         * ~/repos/interface-specification-propagator: contains the software responsible for the 'auxiliary contract inference'
          * ~/repos/tricera: contains the TriCera tool that serves as the backend
            for the functional contract inference.
          * ~/repos/autodeduct-examples/tacas
