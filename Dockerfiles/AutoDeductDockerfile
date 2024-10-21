@@ -36,6 +36,9 @@ ARG FRAMA_C_VER="29.0"
 ARG SAIDA_VER="v0.2.0"
 ARG ISP_VER="v0.3.0"
 ARG TRICERA_VER="v0.3.1"
+ARG AD_EXAMPLES_VER="tacas"
+
+ARG START_LOC="/home/dev/"
 # This is a workaround until TriCera gets more regular commits.
 # ARG TRICERA_COMMIT="d1e803f52623e9c5535076ba4790d37b46403695"
 
@@ -89,6 +92,8 @@ RUN apt-get update && \
 # trusted root certificates. Otherwise, tools like curl won't work when
 # we are behind the proxy.
 COPY ${CERT} ${CERT_LOC}
+COPY --chmod=0755 autodeduct ${START_LOC}
+COPY README.md ${START_LOC}
 
 RUN update-ca-certificates && \
   keytool \
@@ -141,9 +146,9 @@ RUN curl -fLo coursierLauncher https://github.com/coursier/launchers/raw/master/
 
 ##
 # Stage 4 - Add TriCera codebase and compile
-# 
+#
 # NOTE: We change the version of sbt build properties in order
-#   avoid a deprecation error. 
+#   avoid a deprecation error.
 #  (java.lang.UnsupportedOperationException: The Security Manager
 #   is deprecated and will be removed in a future release)
 #
@@ -190,9 +195,13 @@ RUN . /home/dev/.profile && \
   dune install
 
 RUN . /home/dev/.profile && \
-  git clone --depth 1 https://github.com/rse-verification/auto-deduct-examples.git
+  git clone --depth 1 --branch "${AD_EXAMPLES_VER}" https://github.com/rse-verification/auto-deduct-examples.git
 
 WORKDIR /home/dev
+
+## Add also the script to run
+
+##########################
 
 # Enable use of Xserver on docker host
 ENV DISPLAY=host.docker.internal:0.0

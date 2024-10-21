@@ -1,0 +1,81 @@
+#!/bin/bash
+
+# Initialize flags for optional arguments
+run_fun=false
+run_aux=false
+run_wp=false
+lib_entry_flag=""
+main_function="main"  # Default value
+file=""
+
+# Parse optional arguments
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        -func) run_fun=true ;;
+        -aux) run_aux=true ;;
+        -wp) run_wp=true ;;
+        -lib-entry) lib_entry_flag="-lib-entry" ;;
+        -main)
+            shift
+            if [[ -n $1 && $1 != -* ]]; then
+                main_function="$1"
+            else
+                echo "Error: -main requires a string argument"
+                exit 1
+            fi
+            ;;
+        -*)
+            echo "Error: Unsupported argument $1"
+            exit 1
+            ;;
+        *)
+            if [ -z "$file" ]; then
+                file="$1"
+            else
+                echo "Error: Multiple files or unsupported argument $1"
+                exit 1
+            fi
+            ;;
+    esac
+    shift
+done
+
+if [ -z "$file" ]; then
+    echo "Usage: Provide the name for the file to infer contracts for and verify with WP."
+    exit 1
+fi
+
+# Change directory to the folder containing the file
+file_dir=$(dirname "$file")
+cd "$file_dir" || { echo "Error: Could not change to directory $file_dir"; exit 1; }
+
+# If none of the optional arguments are given, run all commands by default
+if [ "$run_fun" = false ] && [ "$run_aux" = false ] && [ "$run_wp" = false ]; then
+    run_fun=true
+    run_aux=true
+    run_wp=true
+fi
+
+# Run the selected commands based on the flags
+if [ "$run_fun" = true ]; then
+    echo -e "\n################################################"
+    echo "# Inferring functional annotations with Saida #"
+    echo -e "###############################################\n"
+    frama-c $lib_entry_flag -main "$main_function" -saida "$(basename "$file")"
+    echo -e "###############################################\n\n"
+fi
+
+if [ "$run_aux" = true ]; then
+    echo "#############################################"
+    echo "# Inferring auxiliary annotations with ISP #"
+    echo -e "#############################################\n"
+    frama-c $lib_entry_flag -isp-entry-point "$main_function" -isp tmp_inferred_source_merged.c -isp-print-file out.c
+    echo -e "###############################################\n\n"
+fi
+
+if [ "$run_wp" = true ]; then
+    echo -e "##############################################"
+    echo "############### Verifying with WP ##############"
+    echo -e "##############################################\n"
+    frama-c $lib_entry_flag -main "$main_function" -wp out.c
+fi
