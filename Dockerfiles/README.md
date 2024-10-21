@@ -61,12 +61,28 @@ by the functional inference part may also be of interest, it will be stored in:
 
 # Artifact Organisation
 The organisation of the software and examples in the Docker image is as follows
-         * ~/repos/saida: Contains the Frama-C plugin responsible for the 'functional contract inference'
-         * ~/repos/interface-specification-propagator: contains the software responsible for the 'auxiliary contract inference'
+         * ~/repos/saida: Contains the Frama-C plugin responsible for the
+          'functional contract inference'
+         * ~/repos/interface-specification-propagator: contains the software
+          responsible for the 'auxiliary contract inference'
          * ~/repos/tricera: contains the TriCera tool that serves as the backend
            for the functional contract inference.
          * ~/repos/autodeduct-examples/tacas
            Contains the two example files from the paper
 
 # Reuse / Repurpose
-To repurpose the usage
+To repurpose the software, we have several entry points.
+
+To extend the functional inference, the starting point would be the file
+~/repos/saida/src/main.ml.
+
+The back-end for the contract inference, TriCera, can also be extended, with the
+recommended starting point being the file
+~/repose/tricera/src/tricera/concurrency/CCReader.scala.
+
+To repurpose the auxiliary inference part, the recommended starting point would
+be the file
+~/repos/interface-specification-propagator/blob/master/src/isp_visitor.ml
+
+To change the usage of the tool-chain, and how to verify with WP, the script
+~/autodeduct can be modified.

@@ -94,6 +94,7 @@ RUN apt-get update && \
 COPY ${CERT} ${CERT_LOC}
 COPY --chmod=0755 autodeduct ${START_LOC}
 COPY README.md ${START_LOC}
+COPY LICENSE ${START_LOC}
 
 RUN update-ca-certificates && \
   keytool \
