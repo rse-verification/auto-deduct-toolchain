@@ -25,19 +25,21 @@ than one minute on a standard laptop.
 The output should show that the program is verified by the WP plugin of Frama-C.
 The final annotated file is saved as ~/repos/auto-deduct-examples/tacas-2025/out.c
 
-# Further testing
-When running the AutoDeduct script, it runs first the functional inference, then
-the auxiliary inference, and lastly the verification with WP. Below we describe how
-to run only a subset of these three steps.
+# About the toolchain
+Autodeduct takes as input a C-file, where the entry-point is annotated with an
+ACSL contract, and attempts to verify it using the WP. Before verifying with WP,
+it first infers contracts, using two separate Frama-C plugins. First, it runs
+the plugin for 'functional inference', then the plugin for 'auxiliary inference'.
+If the inference steps succeeds, this produces a fully annotated version of the
+program, where all functions now are equipped with a function contract.
+Lastly, autodeduct, calls the WP plugin to verify (1) that each function
+satisfies its inferred contract and (2) that the entry-point satisfies its
+contract (for which WP will make use of the inferred contracts).
 
 Aside from the final output file (see smokephase), the intermediate file produced
 by the functional inference part may also be of interest, it will be stored in:
 ~/repos/auto-deduct-examples/tacas-2025/tmp_source_inferred.c
 
-
-# About the toolchain
- Auto-deduct takes as input a C-file and attempts to verify it using the
- WP plugin of Frama-C.
 
 # Running AutoDeduct
   To run the contract inference and and verification using autodeduct, we
