@@ -1,7 +1,8 @@
 The autodeduct Toolchain is in general licenced under GNU General Public License
-Version 2 (Licence text follow below). Some of the software included uses other 
-(permissive) licences. In particular, the TriCera backend software uses the
-permissive BSD 3-Clause License (available in ~/repos/tricera).
+Version 2 (Licence text follow below). Some of the software included use other
+licences, which is then available in the corresponding subfolder. In particular,
+the TriCera backend software uses the permissive BSD 3-Clause License (available
+in ~/repos/tricera).
 
 GNU GENERAL PUBLIC LICENSE
    Version 2, June 1991

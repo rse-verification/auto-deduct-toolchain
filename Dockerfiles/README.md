@@ -5,6 +5,15 @@ This Docker image is produced as an artifact for the paper  'AutoDeduct:
  verification of C code with Frama-C using contrace inference.
 
 # Smokephase / quickguide
+The docker image has been created and tested on Ubuntu 22.04 running in
+Virtualbox on a Windows 10 host.
+
+To load and then run the docker file, run:
+```bash
+  docker load --input auto-deduct.tar
+  docker run -it auto-deduct
+```
+
 For the smokephase, we recommend trying running autodeduct on the two programs
 included in the paper, with the following commands:
 ```bash

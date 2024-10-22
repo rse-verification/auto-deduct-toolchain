@@ -92,9 +92,6 @@ RUN apt-get update && \
 # trusted root certificates. Otherwise, tools like curl won't work when
 # we are behind the proxy.
 COPY ${CERT} ${CERT_LOC}
-COPY --chmod=0755 autodeduct ${START_LOC}
-COPY README.md ${START_LOC}
-COPY LICENSE ${START_LOC}
 
 RUN update-ca-certificates && \
   keytool \
@@ -199,6 +196,11 @@ RUN . /home/dev/.profile && \
   git clone --depth 1 --branch "${AD_EXAMPLES_VER}" https://github.com/rse-verification/auto-deduct-examples.git
 
 WORKDIR /home/dev
+
+COPY --chmod=0755 autodeduct ${START_LOC}
+COPY README.md ${START_LOC}
+COPY LICENSE ${START_LOC}
+
 
 ## Add also the script to run
 
