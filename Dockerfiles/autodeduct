@@ -77,5 +77,5 @@ if [ "$run_wp" = true ]; then
     echo -e "##############################################"
     echo "############### Verifying with WP ##############"
     echo -e "##############################################\n"
-    frama-c $lib_entry_flag -main "$main_function" -wp out.c
+    frama-c $lib_entry_flag -main "$main_function" -wp -wp-timeout 10 out.c
 fi
