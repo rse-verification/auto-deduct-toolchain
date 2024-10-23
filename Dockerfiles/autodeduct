@@ -69,7 +69,11 @@ if [ "$run_aux" = true ]; then
     echo "#############################################"
     echo "# Inferring auxiliary annotations with ISP #"
     echo -e "#############################################\n"
-    frama-c $lib_entry_flag -isp-entry-point "$main_function" -isp tmp_inferred_source_merged.c -isp-print-file out.c
+    if [ "$run_fun" = true ]; then
+      frama-c $lib_entry_flag -isp-entry-point "$main_function" -isp tmp_inferred_source_merged.c -isp-print-file out.c
+    else
+      frama-c $lib_entry_flag -isp-entry-point "$main_function" -isp "$(basename "$file")" -isp-print-file out.c
+    fi
     echo -e "###############################################\n\n"
 fi
 
@@ -77,5 +81,21 @@ if [ "$run_wp" = true ]; then
     echo -e "##############################################"
     echo "############### Verifying with WP ##############"
     echo -e "##############################################\n"
-    frama-c $lib_entry_flag -main "$main_function" -wp -wp-timeout 10 out.c
+    if [ "$run_aux" = true ]; then
+      frama-c $lib_entry_flag -main "$main_function" -wp -wp-timeout 10 out.c
+    elif [ "$run_fun" = true ]; then
+      frama-c $lib_entry_flag -main "$main_function" -wp -wp-timeout 10 tmp_inferred_source_merged.c
+    else
+      frama-c $lib_entry_flag -main "$main_function" -wp -wp-timeout 10 "$(basename "$file")"
+    fi
+fi
+if [ "$run_fun" = true ]; then
+  echo -e "\nResulting file from the functional inference: $file_dir/tmp_inferred_source_merged.c"
+  if [ "$run_aux" = true ]; then
+    echo -e "Resulting file from the functional+auxiliary inference: $file_dir/out.c\n"
+  fi
+elif [ "$run_aux" = true ]; then
+  echo -e "\nResulting file from the auxiliary inference: $file_dir/out.c\n"
+else
+  echo -e "\nNo contract inference was performed in the analysis. (add option -func or -aux to activate the contract inference)\n"
 fi

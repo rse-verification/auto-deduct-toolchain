@@ -38,7 +38,7 @@ contract (for which WP will make use of the inferred contracts).
 
 Aside from the final output file (see smokephase), the intermediate file produced
 by the functional inference part may also be of interest, it will be stored in:
-~/repos/auto-deduct-examples/tacas-2025/tmp_source_inferred.c
+~/repos/auto-deduct-examples/tacas-2025/tmp_inferred_source_merged.c
 
 
 # Running AutoDeduct
