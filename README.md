@@ -3,14 +3,14 @@
 This is a project for composing a formal verification toolchain using
 TriCera, Frama-C and custom Frama-C plug-ins.
 
-The development environment and toolchain is provided as a Dockerfile
+The development environment and toolchain are provided as a Dockerfile
 under the GNU GPLv2 license. For full license conditions, please see
 the [LICENSE](LICENSE) file
 
 ## Designed with VSCode in mind
 
-While not at all nececassry for using the image, it is designed with
-Visual Studio Code in mind, and more specifically using it as a container
+While not at all necessary for using the image, it is designed with
+Visual Studio Code in mind, and more specifically, using it as a container
 for [remote development](https://code.visualstudio.com/docs/remote/remote-overview)
 in VSCode. An example/template of a
 [devcontainer configuration](https://code.visualstudio.com/docs/devcontainers/containers)
@@ -21,7 +21,7 @@ can be found in this repository, in `.devcontainer/devcontainer.json`.
 In the examples we are using bash, but the syntax should be similar
 in your command line shell of choice.
 
-The dockerfile will download things using a java runtime environment
+The dockerfile will download things using a Java runtime environment
 (JRE). JRE needs to know about proxies, so if you are building the
 container while behind a proxy please provide the appropriate values
 according to the example below. (Also remember that you might have to
