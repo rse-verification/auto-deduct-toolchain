@@ -1,6 +1,6 @@
 {
    "name": "AutoDeduct",
-   "image": "auto-deduct:0.1.0-beta.8",
+   "image": "auto-deduct:0.1.0-beta.9",
    "remoteUser": "dev",
    "containerEnv": {
       "GITHUB_TOKEN": "${localEnv:GITHUB_TOKEN}",
@@ -8,7 +8,8 @@
       // The following makes sure that certificates inside the container
       // is considered e.g. when installing vscode extensions on container
       // startup.
-      "NODE_EXTRA_CA_CERTS":"/etc/ssl/certs/ca-certificates.crt"
+      "NODE_EXTRA_CA_CERTS":"/etc/ssl/certs/ca-certificates.crt",
+      "GIT_CONFIG_GLOBAL": "/home/dev/persistent/repos/.gitconfig"
    },
    "runArgs": [
       "--init",
@@ -25,11 +26,13 @@
             // Add the identifiers of the extensions you want installed.
             // Extension identifiers can be fount in the marketplace. 
 //           "llvm-vs-code-extensions.vscode-clangd",
+            "scalameta.metals",
+            "ocamllabs.ocaml-platform" 
          ]
       }
    },
    "mounts": [
       // Additional mounts besides the directory you are starting VSCode from.
-//      "source=docker_conan,target=/home/.conan/data,type=volume,consistency=cached"
+      "source=docker_repos,target=/home/dev/persistent/repos/,type=volume,consistency=cached"
    ]
 }

@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-# Copyright 2024 Scania CV AB
+# Copyright 2024-2025 Scania CV AB
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -24,7 +24,7 @@
 # NOTE: We start with Ubuntu instead of e.g. Alpine because
 #   Frama-C under Alpine does not fully support E-ACSL.
 #
-FROM ubuntu:24.04 as auto-deduct-base
+FROM ubuntu:24.04 AS auto-deduct-base
 
 ARG CERT="./cert/scania-it-tls-inspect-root.crt"
 ARG CERT_LOC="/usr/local/share/ca-certificates/"
@@ -32,10 +32,10 @@ ARG CERT_LOC="/usr/local/share/ca-certificates/"
 ARG PROXY_HOST=""
 ARG PROXY_PORT=""
 
-ARG FRAMA_C_VER="29.0"
-ARG SAIDA_VER="v0.2.0"
-ARG ISP_VER="v0.3.0"
-ARG TRICERA_VER="v0.3.1"
+ARG FRAMA_C_VER="31.0"
+ARG SAIDA_VER="v0.4.0"
+ARG ISP_VER="v0.3.1"
+ARG TRICERA_VER="v0.3.2"
 # This is a workaround until TriCera gets more regular commits.
 # ARG TRICERA_COMMIT="d1e803f52623e9c5535076ba4790d37b46403695"
 
@@ -68,6 +68,7 @@ RUN apt-get update && \
     ca-certificates \
     curl \
     cvc4 \
+    git \
     graphviz \
     libcairo2-dev \
     libexpat1-dev \
@@ -80,6 +81,7 @@ RUN apt-get update && \
     opam \
     openjdk-21-jdk \
     sudo \
+    vim \
     yaru-theme-icon \
     z3 \
     --yes
@@ -105,11 +107,31 @@ RUN  adduser --disabled-password --shell /usr/bin/bash --uid ${UID} --gecos "Dev
   echo "dev:dev" | chpasswd && \
   usermod -aG sudo dev
 
+USER dev
+WORKDIR /home/dev
+
+# Fix "less" charset settings.
+RUN echo "export LESSCHARSET=utf-8" >> .profile
+
+# Fix git propmt and add bash autocompletion for git commands
+RUN . /home/dev/.profile && \
+  echo ". /etc/bash_completion.d/git-prompt" >> .bashrc && \
+  echo ". /usr/share/bash-completion/completions/git" >> .bashrc && \
+  cat >> /home/dev/.bashrc <<EOF
+if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
+    # We have color support; assume it's compliant with Ecma-48
+    # (ISO/IEC-6429). (Lack of such support is extremely rare, and such
+    # a case would tend to support setf rather than setaf.)
+    PROMPT_COMMAND='__git_ps1 "${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00;35m\]" "\[\033[00m\]\$ "'
+else
+    PROMPT_COMMAND='__git_ps1 "${debian_chroot:+($debian_chroot)}\u@\h:\w" "\$ "'
+fi
+EOF
 
 ##
 # Stage 2 - Add Frama-C related stuff
 #
-FROM auto-deduct-base as auto-deduct-frama-c
+FROM auto-deduct-base AS auto-deduct-frama-c
 
 USER dev
 WORKDIR /home/dev
@@ -118,12 +140,20 @@ RUN opam init --disable-sandboxing --yes && \
   opam init --shell-setup && \
   opam install "frama-c.${FRAMA_C_VER}" --yes && \
   opam install ocaml-lsp-server --yes && \
-  opam clean
+  opam install ocamlformat --yes && \
+  opam clean && \
+  eval $(opam env)
+
+# Add Frama-C auto-completion for bash
+RUN . /home/dev/.profile && \
+  mkdir -p /home/dev/.local/share/bash-completion/completions && \
+  cp $(frama-c-config -print-share-path)/autocomplete_frama-c /home/dev/.local/share/bash-completion/completions/frama-c && \
+  echo ". /home/dev/.local/share/bash-completion/completions/frama-c" >> /home/dev/.bashrc
 
 ##
 # Stage 3 - Add Scala related stuff
 #
-FROM auto-deduct-frama-c as auto-deduct-scala
+FROM auto-deduct-frama-c AS auto-deduct-scala
 
 USER dev
 WORKDIR /home/dev
@@ -147,7 +177,7 @@ RUN curl -fLo coursierLauncher https://github.com/coursier/launchers/raw/master/
 #  (java.lang.UnsupportedOperationException: The Security Manager
 #   is deprecated and will be removed in a future release)
 #
-FROM auto-deduct-scala as auto-deduct-tricera
+FROM auto-deduct-scala AS auto-deduct-tricera
 
 USER dev
 WORKDIR /home/dev/repos
@@ -171,7 +201,7 @@ RUN ln -s /home/dev/repos/tricera/tri && \
 #   private GitHub project. You will have to download and install
 #   it after the container image has been built.
 #
-FROM auto-deduct-tricera as auto-deduct-toolchain
+FROM auto-deduct-tricera AS auto-deduct-toolchain
 
 USER dev
 WORKDIR /home/dev/repos
@@ -194,6 +224,8 @@ RUN . /home/dev/.profile && \
 
 WORKDIR /home/dev
 
-# Enable use of Xserver on docker host
+# Enable use of X-server on docker host
+# For use with WSLg and Windows 11 please see:
+# https://stackoverflow.com/questions/73092750/how-to-show-gui-apps-from-docker-desktop-container-on-windows-11
 ENV DISPLAY=host.docker.internal:0.0
-CMD exec /usr/bin/bash -l
+CMD ["/usr/bin/bash", "-l"]
