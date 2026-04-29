@@ -16,6 +16,14 @@ in VSCode. An example/template of a
 [devcontainer configuration](https://code.visualstudio.com/docs/devcontainers/containers)
 can be found in this repository, in `.devcontainer/devcontainer.json`.
 
+Please note that the devcontainer will also mount a docker volume under
+`/home/dev/persistent/repos/`. This is intended for persistent storage
+between rebuilds of the devcontainer. You can of course use the ordinary
+workspace folder provided by the devcontainer, but if you are on Windows
+that folder typically resides on a Windows file system drive which will
+make file access very slow inside the Linux container. This is very
+noticable when compiling e.g. Scala applications.
+
 ## Building the docker image
 
 In the examples we are using bash, but the syntax should be similar

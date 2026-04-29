@@ -33,11 +33,11 @@ ARG PROXY_HOST=""
 ARG PROXY_PORT=""
 
 ARG FRAMA_C_VER="31.0"
-ARG SAIDA_VER="v0.4.0"
+ARG SAIDA_VER="v0.5.0"
 ARG ISP_VER="v0.3.1"
-ARG TRICERA_VER="v0.4"
-# This is a workaround until TriCera gets more regular commits.
-# ARG TRICERA_COMMIT="d1e803f52623e9c5535076ba4790d37b46403695"
+# ARG TRICERA_VER="v0.4"
+# This is a workaround until TriCera gets more regular releases.
+ARG TRICERA_VER="5324b60f43e3e90314a151d056e5559a0ec3d63e"
 
 # This is the user id of "dev" user that will be created in the container
 ARG UID="2000"
