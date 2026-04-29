@@ -1,6 +1,6 @@
 {
    "name": "AutoDeduct",
-   "image": "auto-deduct:0.1.0-beta.9",
+   "image": "auto-deduct:latest",
    "remoteUser": "dev",
    "containerEnv": {
       "GITHUB_TOKEN": "${localEnv:GITHUB_TOKEN}",
@@ -25,7 +25,7 @@
          "extensions": [
             // Add the identifiers of the extensions you want installed.
             // Extension identifiers can be fount in the marketplace. 
-//           "llvm-vs-code-extensions.vscode-clangd",
+            // "llvm-vs-code-extensions.vscode-clangd",
             "scalameta.metals",
             "ocamllabs.ocaml-platform" 
          ]
