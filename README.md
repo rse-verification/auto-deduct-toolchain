@@ -129,3 +129,16 @@ docker run -it --env DISPLAY=$DISPLAY --volume /tmp/.X11-unix:/tmp/.X11-unix
 ### On Mac
 
 To be done.
+
+## AutoDeduct C/ACSL micro support tests
+
+This branch contains a public-safe set of synthetic C/ACSL micro-tests under:
+
+    autodeduct-support/
+
+These tests are intended for exploring support boundaries of the AutoDeduct pipeline across Frama-C parsing, Saida functional inference, ISP auxiliary annotation inference, and WP verification.
+
+See:
+
+    autodeduct-support/README.md
+    MICRO_RESULTS.md

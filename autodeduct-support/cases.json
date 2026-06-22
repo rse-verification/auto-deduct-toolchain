@@ -1,0 +1,95 @@
+{
+  "description": "Public-safe synthetic C/ACSL micro-tests for AutoDeduct support exploration.",
+  "cases": [
+    {
+      "id": "micro_int_if_helper",
+      "module": "micro",
+      "kind": "micro_supported",
+      "path": "autodeduct-support/micro-tests/supported/int_if_helper.c",
+      "entry_point": "entry",
+      "expected": "supported",
+      "description": "Generic integer branch and helper-call micro-test expected to pass end to end."
+    },
+    {
+      "id": "micro_assigns_old",
+      "module": "micro",
+      "kind": "micro_supported",
+      "path": "autodeduct-support/micro-tests/supported/assigns_old.c",
+      "entry_point": "entry",
+      "expected": "supported",
+      "description": "Generic global assignment micro-test using assigns and old-value reasoning."
+    },
+    {
+      "id": "micro_global_array_basic",
+      "module": "micro",
+      "kind": "micro_supported",
+      "path": "autodeduct-support/micro-tests/supported/global_array_basic.c",
+      "entry_point": "entry",
+      "expected": "supported",
+      "description": "Generic fixed global array write micro-test expected to pass end to end."
+    },
+    {
+      "id": "micro_struct_basic",
+      "module": "micro",
+      "kind": "micro_supported",
+      "path": "autodeduct-support/micro-tests/supported/struct_basic.c",
+      "entry_point": "entry",
+      "expected": "supported",
+      "description": "Generic struct field assignment micro-test expected to pass end to end."
+    },
+    {
+      "id": "micro_float_arithmetic",
+      "module": "micro",
+      "kind": "micro_expected_unsupported",
+      "path": "autodeduct-support/micro-tests/expected_unsupported/float_arithmetic.c",
+      "entry_point": "entry",
+      "expected": "expected_unsupported",
+      "description": "Boundary micro-test for floating-point arithmetic."
+    },
+    {
+      "id": "micro_pointer_arithmetic",
+      "module": "micro",
+      "kind": "micro_expected_unsupported",
+      "path": "autodeduct-support/micro-tests/expected_unsupported/pointer_arithmetic.c",
+      "entry_point": "entry",
+      "expected": "expected_unsupported",
+      "description": "Boundary micro-test for pointer arithmetic."
+    },
+    {
+      "id": "micro_local_static",
+      "module": "micro",
+      "kind": "micro_expected_unsupported",
+      "path": "autodeduct-support/micro-tests/expected_unsupported/local_static.c",
+      "entry_point": "entry",
+      "expected": "expected_unsupported",
+      "description": "Boundary micro-test for local static storage."
+    },
+    {
+      "id": "micro_nested_pointer",
+      "module": "micro",
+      "kind": "micro_expected_unsupported",
+      "path": "autodeduct-support/micro-tests/expected_unsupported/nested_pointer.c",
+      "entry_point": "entry",
+      "expected": "expected_unsupported",
+      "description": "Boundary micro-test for nested pointers."
+    },
+    {
+      "id": "micro_acsl_logic_function",
+      "module": "micro",
+      "kind": "micro_expected_unsupported",
+      "path": "autodeduct-support/micro-tests/expected_unsupported/acsl_logic_function.c",
+      "entry_point": "entry",
+      "expected": "expected_unsupported",
+      "description": "Boundary micro-test for ACSL logic function use."
+    },
+    {
+      "id": "micro_loop_without_invariant",
+      "module": "micro",
+      "kind": "micro_expected_unsupported",
+      "path": "autodeduct-support/micro-tests/expected_unsupported/loop_without_invariant.c",
+      "entry_point": "entry",
+      "expected": "expected_unsupported",
+      "description": "Boundary micro-test for loops without explicit invariants."
+    }
+  ]
+}
