@@ -56,3 +56,20 @@ The results were obtained using an AutoDeduct Docker environment with the split 
 ## Interpretation
 
 These tests are small feature probes. They are not intended to prove complete support for all variants of a C or ACSL feature. They provide reproducible examples for support exploration and regression testing.
+
+## Additional local-static boundary probe
+
+A stronger local-static boundary test was added after the initial run:
+
+    micro_local_static_helper_persistence
+
+This test uses a helper function with persistent local static state and calls it twice from the entry point.
+
+Observed result:
+
+    micro_local_static_helper_persistence
+      Result: expected support boundary
+      Observed boundary: WP did not prove all goals
+      WP goals: 30/35
+
+This result is more useful than the simple `micro_local_static` test, which unexpectedly passed end-to-end.

@@ -65,6 +65,15 @@
       "description": "Boundary micro-test for local static storage."
     },
     {
+      "id": "micro_local_static_helper_persistence",
+      "module": "micro",
+      "kind": "micro_expected_unsupported",
+      "path": "autodeduct-support/micro-tests/expected_unsupported/local_static_helper_persistence.c",
+      "entry_point": "entry",
+      "expected": "expected_unsupported",
+      "description": "Boundary micro-test for persistent local static state across multiple helper calls."
+    },
+    {
       "id": "micro_nested_pointer",
       "module": "micro",
       "kind": "micro_expected_unsupported",

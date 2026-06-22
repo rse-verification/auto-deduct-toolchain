@@ -54,3 +54,17 @@ The exact result can depend on the versions of AutoDeduct, Saida, ISP, Frama-C, 
 ## Interpretation
 
 These tests are feature probes. They are not intended to prove complete support for all possible variants of a C or ACSL feature. They provide small reproducible examples for support exploration and regression testing.
+
+## Public micro-test runner
+
+This branch also contains a public-safe micro-test runner:
+
+    autodeduct-support/run_micro_tests.py
+
+It only reads `autodeduct-support/cases.json` and only runs cases whose module is `micro`.
+
+Example commands inside an AutoDeduct environment:
+
+    python3 autodeduct-support/run_micro_tests.py --run-framac
+    python3 autodeduct-support/run_micro_tests.py --run-framac --run-split --kind micro_supported --timeout 600
+    python3 autodeduct-support/run_micro_tests.py --run-framac --run-split --kind micro_expected_unsupported --timeout 600
