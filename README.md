@@ -128,4 +128,61 @@ docker run -it --env DISPLAY=$DISPLAY --volume /tmp/.X11-unix:/tmp/.X11-unix
 
 ### On Mac
 
-To be done.
+On macOS, Docker Desktop does not provide an X server. Install
+[XQuartz](https://www.xquartz.org/) before running the Frama-C GUI.
+
+1. Install XQuartz, for example with Homebrew:
+
+```shell
+brew install --cask xquartz
+```
+
+2. Start XQuartz.
+3. In XQuartz, open `Settings...` / `Preferences...`, go to the
+   `Security` tab, and enable `Allow connections from network clients`.
+4. Restart XQuartz after changing that setting.
+5. If the setting is not visible in the GUI, enable it from a macOS
+   terminal instead:
+
+```shell
+defaults write org.xquartz.X11 nolisten_tcp -bool false
+osascript -e 'quit app "XQuartz"'
+open -a XQuartz
+```
+
+6. In a macOS terminal, allow local X11 clients to connect:
+
+```shell
+DISPLAY=:0 /opt/X11/bin/xhost + 127.0.0.1
+```
+
+Then start the container with the display set to the special Docker
+Desktop host name:
+
+```shell
+docker run -it --env DISPLAY=host.docker.internal:0 auto-deduct
+```
+
+You can check the X11 connection from inside the container before
+starting the GUI:
+
+```shell
+xdpyinfo -display "$DISPLAY"
+```
+
+Inside the container, start the GUI:
+
+```shell
+frama-c-gui
+```
+
+When you are done, you can revoke the XQuartz access again from the
+macOS terminal:
+
+```shell
+DISPLAY=:0 /opt/X11/bin/xhost - 127.0.0.1
+```
+
+If the GUI does not open, check that XQuartz is still running, that
+network clients are enabled in XQuartz, and that the container sees
+`DISPLAY=host.docker.internal:0`.
