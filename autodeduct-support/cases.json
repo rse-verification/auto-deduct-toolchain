@@ -7,7 +7,7 @@
       "kind": "micro_supported",
       "path": "autodeduct-support/micro-tests/supported/int_if_helper.c",
       "entry_point": "entry",
-      "expected": "supported",
+      "expected_support": "supported",
       "description": "Generic integer branch and helper-call micro-test expected to pass end to end."
     },
     {
@@ -16,7 +16,7 @@
       "kind": "micro_supported",
       "path": "autodeduct-support/micro-tests/supported/assigns_old.c",
       "entry_point": "entry",
-      "expected": "supported",
+      "expected_support": "supported",
       "description": "Generic global assignment micro-test using assigns and old-value reasoning."
     },
     {
@@ -25,7 +25,7 @@
       "kind": "micro_supported",
       "path": "autodeduct-support/micro-tests/supported/global_array_basic.c",
       "entry_point": "entry",
-      "expected": "supported",
+      "expected_support": "supported",
       "description": "Generic fixed global array write micro-test expected to pass end to end."
     },
     {
@@ -34,7 +34,7 @@
       "kind": "micro_supported",
       "path": "autodeduct-support/micro-tests/supported/struct_basic.c",
       "entry_point": "entry",
-      "expected": "supported",
+      "expected_support": "supported",
       "description": "Generic struct field assignment micro-test expected to pass end to end."
     },
     {
@@ -43,7 +43,8 @@
       "kind": "micro_expected_unsupported",
       "path": "autodeduct-support/micro-tests/expected_unsupported/float_arithmetic.c",
       "entry_point": "entry",
-      "expected": "expected_unsupported",
+      "expected_support": "expected_unsupported",
+      "expected_reason": "float_arithmetic",
       "description": "Boundary micro-test for floating-point arithmetic."
     },
     {
@@ -52,7 +53,8 @@
       "kind": "micro_expected_unsupported",
       "path": "autodeduct-support/micro-tests/expected_unsupported/pointer_arithmetic.c",
       "entry_point": "entry",
-      "expected": "expected_unsupported",
+      "expected_support": "expected_unsupported",
+      "expected_reason": "pointer_arithmetic",
       "description": "Boundary micro-test for pointer arithmetic."
     },
     {
@@ -61,7 +63,8 @@
       "kind": "micro_expected_unsupported",
       "path": "autodeduct-support/micro-tests/expected_unsupported/local_static.c",
       "entry_point": "entry",
-      "expected": "expected_unsupported",
+      "expected_support": "expected_unsupported",
+      "expected_reason": "local_static_variables",
       "description": "Boundary micro-test for local static storage."
     },
     {
@@ -70,7 +73,8 @@
       "kind": "micro_expected_unsupported",
       "path": "autodeduct-support/micro-tests/expected_unsupported/local_static_helper_persistence.c",
       "entry_point": "entry",
-      "expected": "expected_unsupported",
+      "expected_support": "expected_unsupported",
+      "expected_reason": "local_static_helper_persistence",
       "description": "Boundary micro-test for persistent local static state across multiple helper calls."
     },
     {
@@ -79,7 +83,8 @@
       "kind": "micro_expected_unsupported",
       "path": "autodeduct-support/micro-tests/expected_unsupported/nested_pointer.c",
       "entry_point": "entry",
-      "expected": "expected_unsupported",
+      "expected_support": "expected_unsupported",
+      "expected_reason": "nested_pointers",
       "description": "Boundary micro-test for nested pointers."
     },
     {
@@ -88,7 +93,8 @@
       "kind": "micro_expected_unsupported",
       "path": "autodeduct-support/micro-tests/expected_unsupported/acsl_logic_function.c",
       "entry_point": "entry",
-      "expected": "expected_unsupported",
+      "expected_support": "expected_unsupported",
+      "expected_reason": "acsl_logic_function",
       "description": "Boundary micro-test for ACSL logic function use."
     },
     {
@@ -97,7 +103,8 @@
       "kind": "micro_expected_unsupported",
       "path": "autodeduct-support/micro-tests/expected_unsupported/loop_without_invariant.c",
       "entry_point": "entry",
-      "expected": "expected_unsupported",
+      "expected_support": "expected_unsupported",
+      "expected_reason": "loop_without_invariant",
       "description": "Boundary micro-test for loops without explicit invariants."
     }
   ]

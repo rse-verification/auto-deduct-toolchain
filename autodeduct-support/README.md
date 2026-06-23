@@ -37,6 +37,7 @@ The `expected_unsupported` group contains tests designed to exercise known or su
     float_arithmetic.c
     pointer_arithmetic.c
     local_static.c
+    local_static_helper_persistence.c
     nested_pointer.c
     acsl_logic_function.c
     loop_without_invariant.c
