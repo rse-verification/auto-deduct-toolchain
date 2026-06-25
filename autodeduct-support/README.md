@@ -69,3 +69,14 @@ Example commands inside an AutoDeduct environment:
     python3 autodeduct-support/run_micro_tests.py --run-framac
     python3 autodeduct-support/run_micro_tests.py --run-framac --run-split --kind micro_supported --timeout 600
     python3 autodeduct-support/run_micro_tests.py --run-framac --run-split --kind micro_expected_unsupported --timeout 600
+
+## Additional public feature probes
+
+The current public micro-test set also includes additional feature probes:
+
+    valid_pointer_struct.c
+    enum_switch_basic.c
+    behavior_basic.c
+    array_struct_field_boundary.c
+
+These tests help distinguish simple supported C/ACSL patterns from more complex support-boundary patterns. For example, a simple array-of-struct field-access test can pass, while a stronger helper-returning-struct pattern may expose an auxiliary-inference boundary.

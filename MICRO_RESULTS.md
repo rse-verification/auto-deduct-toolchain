@@ -61,3 +61,27 @@ The results were obtained using an AutoDeduct Docker environment with the split 
 ## Interpretation
 
 These tests are small feature probes. They are not intended to prove complete support for all variants of a C or ACSL feature. They provide reproducible examples for support exploration and regression testing.
+
+## Additional public feature probes
+
+The following additional public-safe micro-tests were added after the initial set:
+
+    micro_valid_pointer_struct
+      Result: supported_end_to_end
+      WP goals: 12/12
+
+    micro_enum_switch_basic
+      Result: supported_end_to_end
+      WP goals: 17/17
+
+    micro_behavior_basic
+      Result: supported_end_to_end
+      WP goals: 12/12
+
+    micro_array_struct_field_boundary
+      Result: supported_end_to_end
+      WP goals: 14/14
+
+These results show that simple pointer-to-struct access, enum/switch control flow, simple ACSL behaviors, and simple array-of-struct field access can pass in the tested AutoDeduct pipeline.
+
+A stronger array-of-struct helper-return pattern is being kept as a support-boundary probe, because it is closer to an observed auxiliary-inference failure pattern.

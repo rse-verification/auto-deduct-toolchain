@@ -8,6 +8,7 @@
       "path": "autodeduct-support/micro-tests/supported/int_if_helper.c",
       "entry_point": "entry",
       "expected_support": "supported",
+      "expected_reason": "",
       "description": "Generic integer branch and helper-call micro-test expected to pass end to end."
     },
     {
@@ -17,6 +18,7 @@
       "path": "autodeduct-support/micro-tests/supported/assigns_old.c",
       "entry_point": "entry",
       "expected_support": "supported",
+      "expected_reason": "",
       "description": "Generic global assignment micro-test using assigns and old-value reasoning."
     },
     {
@@ -26,6 +28,7 @@
       "path": "autodeduct-support/micro-tests/supported/global_array_basic.c",
       "entry_point": "entry",
       "expected_support": "supported",
+      "expected_reason": "",
       "description": "Generic fixed global array write micro-test expected to pass end to end."
     },
     {
@@ -35,7 +38,38 @@
       "path": "autodeduct-support/micro-tests/supported/struct_basic.c",
       "entry_point": "entry",
       "expected_support": "supported",
+      "expected_reason": "",
       "description": "Generic struct field assignment micro-test expected to pass end to end."
+    },
+    {
+      "id": "micro_valid_pointer_struct",
+      "module": "micro",
+      "kind": "micro_supported",
+      "path": "autodeduct-support/micro-tests/supported/valid_pointer_struct.c",
+      "entry_point": "entry",
+      "expected_support": "supported",
+      "expected_reason": "",
+      "description": "Generic valid pointer-to-struct field access micro-test expected to pass end to end."
+    },
+    {
+      "id": "micro_enum_switch_basic",
+      "module": "micro",
+      "kind": "micro_supported",
+      "path": "autodeduct-support/micro-tests/supported/enum_switch_basic.c",
+      "entry_point": "entry",
+      "expected_support": "supported",
+      "expected_reason": "",
+      "description": "Generic enum and switch control-flow micro-test expected to pass end to end."
+    },
+    {
+      "id": "micro_behavior_basic",
+      "module": "micro",
+      "kind": "micro_supported",
+      "path": "autodeduct-support/micro-tests/supported/behavior_basic.c",
+      "entry_point": "entry",
+      "expected_support": "supported",
+      "expected_reason": "",
+      "description": "Generic ACSL behavior micro-test with assumes and ensures."
     },
     {
       "id": "micro_float_arithmetic",
@@ -96,6 +130,26 @@
       "expected_support": "expected_unsupported",
       "expected_reason": "acsl_logic_function",
       "description": "Boundary micro-test for ACSL logic function use."
+    },
+    {
+      "id": "micro_array_struct_field_boundary",
+      "module": "micro",
+      "kind": "micro_boundary",
+      "path": "autodeduct-support/micro-tests/expected_unsupported/array_struct_field_boundary.c",
+      "entry_point": "entry",
+      "expected_support": "boundary",
+      "expected_reason": "array_struct_field_access",
+      "description": "Boundary micro-test for array-of-struct field access in ACSL assigns and ensures clauses."
+    },
+    {
+      "id": "micro_array_struct_read_helper_isp_crash",
+      "module": "micro",
+      "kind": "micro_expected_unsupported",
+      "path": "autodeduct-support/micro-tests/expected_unsupported/array_struct_read_helper_isp_crash.c",
+      "entry_point": "entry",
+      "expected_support": "expected_unsupported",
+      "expected_reason": "array_struct_read_helper_isp_crash",
+      "description": "Reduced boundary micro-test for enum-indexed array-of-struct helper reads that may reproduce the ISP typeOffset failure."
     },
     {
       "id": "micro_loop_without_invariant",
