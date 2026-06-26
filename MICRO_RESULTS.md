@@ -1,6 +1,6 @@
-# Initial Micro-Test Result Summary
+# Initial AutoDeduct C/ACSL Support Probe Result Summary
 
-This file summarizes the first observed behavior of the public-safe synthetic micro-tests.
+This file summarizes the first observed behavior of the public-safe synthetic support probes.
 
 The results were obtained using an AutoDeduct Docker environment with the split pipeline:
 
@@ -9,7 +9,7 @@ The results were obtained using an AutoDeduct Docker environment with the split 
     ISP auxiliary inference
     WP verification
 
-## Expected-supported tests
+## Supported End-To-End Probes
 
     micro_int_if_helper
       Result: supported_end_to_end
@@ -27,7 +27,7 @@ The results were obtained using an AutoDeduct Docker environment with the split 
       Result: supported_end_to_end
       WP goals: 16/16
 
-## Expected support-boundary tests
+## Expected Boundary Probes
 
     micro_float_arithmetic
       Observed boundary: WP did not prove all goals
@@ -60,9 +60,9 @@ The results were obtained using an AutoDeduct Docker environment with the split 
 
 ## Interpretation
 
-These tests are small feature probes. They are not intended to prove complete support for all variants of a C or ACSL feature. They provide reproducible examples for support exploration and regression testing.
+These probes are small feature checks. They are not intended to prove complete support for all variants of a C or ACSL feature. They provide reproducible examples for support exploration and regression testing.
 
-## Additional public feature probes
+## Additional Public Support Probes
 
 The following additional public-safe micro-tests were added after the initial set:
 
@@ -81,6 +81,9 @@ The following additional public-safe micro-tests were added after the initial se
     micro_array_struct_field_boundary
       Result: supported_end_to_end
       WP goals: 14/14
+
+    micro_array_struct_read_helper_isp_crash
+      Observed boundary: auxiliary inference stage
 
 These results show that simple pointer-to-struct access, enum/switch control flow, simple ACSL behaviors, and simple array-of-struct field access can pass in the tested AutoDeduct pipeline.
 

@@ -1,82 +1,91 @@
-# AutoDeduct C/ACSL Micro Support Tests
+# AutoDeduct C/ACSL Support Probes
 
-This directory contains public-safe synthetic C/ACSL micro-tests for exploring support boundaries of the AutoDeduct toolchain.
-
-The tests are intentionally small and generic. They do not contain industrial case-study code.
-
-## Purpose
-
-The goal is to record how selected C and ACSL features behave across the AutoDeduct verification pipeline:
-
-    1. Frama-C parsing
-    2. Saida functional contract inference
-    3. ISP auxiliary annotation inference
-    4. WP verification
-
-Some tests are expected to pass end-to-end. Other tests are expected support-boundary tests. A failure in an expected support-boundary test is not necessarily a bug; it records where the current pipeline reaches a known or suspected limitation.
+- This directory contains public-safe C/ACSL support probes for AutoDeduct.
+- It tests small C and ACSL patterns across parsing, inference, and proof phases.
+- It does not contain industrial code or private source artifacts.
+- Run it with `python3 autodeduct-support/run_micro_tests.py --run-framac --run-split`.
+- Read the saved result notes in `MICRO_RESULTS.md`.
 
 ## Contents
 
-    autodeduct-support/
-      cases.json
-      micro-tests/
-        supported/
-        expected_unsupported/
+| File or directory | Purpose |
+|---|---|
+| `cases.json` | Lists each probe, its source file, expected support class, and entry point. |
+| `run_micro_tests.py` | Runs the public-safe probes and writes per-probe result files. |
+| `micro-tests/supported/` | Contains probes expected to pass through the full split pipeline. |
+| `micro-tests/expected_unsupported/` | Contains probes for known or suspected support boundaries. |
+| `../MICRO_RESULTS.md` | Summarizes the currently saved public result observations. |
 
-## Micro-test groups
+## Probe Groups
 
-The `supported` group contains small tests expected to pass through the complete AutoDeduct pipeline:
+| Test group | Example tests | Expected meaning |
+|---|---|---|
+| `micro_supported` | `micro_int_if_helper`, `micro_struct_basic`, `micro_valid_pointer_struct`, `micro_enum_switch_basic` | These probes should pass parsing, Saida, ISP, and WP in the tested pipeline. |
+| `micro_expected_unsupported` | `micro_float_arithmetic`, `micro_pointer_arithmetic`, `micro_nested_pointer`, `micro_loop_without_invariant` | These probes intentionally exercise support boundaries. A failure can be the expected result. |
+| `micro_boundary` | `micro_array_struct_field_boundary` | These probes clarify a boundary by checking a smaller or simpler variant. |
 
-    int_if_helper.c
-    assigns_old.c
-    global_array_basic.c
-    struct_basic.c
+## Current Public Results
 
-The `expected_unsupported` group contains tests designed to exercise known or suspected support boundaries:
+| Result class | Probes | Current observation |
+|---|---|---|
+| `supported_end_to_end` probes | `micro_int_if_helper`, `micro_assigns_old`, `micro_global_array_basic`, `micro_struct_basic`, `micro_valid_pointer_struct`, `micro_enum_switch_basic`, `micro_behavior_basic`, `micro_array_struct_field_boundary` | These probes passed the saved public split-pipeline run. |
+| Expected boundary probes | `micro_float_arithmetic`, `micro_pointer_arithmetic`, `micro_local_static_helper_persistence`, `micro_nested_pointer`, `micro_acsl_logic_function`, `micro_array_struct_read_helper_isp_crash`, `micro_loop_without_invariant` | These probes reached a known or suspected support boundary in the saved public results. |
+| Unexpected pass probes | `micro_local_static` | This simple local-static probe passed, so it is not enough to claim a general local-static limitation. |
 
-    float_arithmetic.c
-    pointer_arithmetic.c
-    local_static.c
-    local_static_helper_persistence.c
-    nested_pointer.c
-    acsl_logic_function.c
-    loop_without_invariant.c
+The exact output can vary with AutoDeduct, Frama-C, Saida, ISP, WP, TriCera, solver versions, and timeout settings.
 
-## Manual pipeline
+## How To Run
 
-After entering an AutoDeduct environment, each micro-test can be run manually with the following split pipeline:
+Run all public probes inside an environment where `frama-c`, Saida, ISP, and WP are available:
 
-    frama-c -saida -main entry -saida-out=tmp_inferred_source_merged.c <test-file.c>
-    frama-c -isp -isp-entry-point entry tmp_inferred_source_merged.c -isp-print-file out.c
-    frama-c -wp -main entry out.c
+```bash
+python3 autodeduct-support/run_micro_tests.py --run-framac --run-split --timeout 600
+```
 
-The exact result can depend on the versions of AutoDeduct, Saida, ISP, Frama-C, WP, TriCera, and the configured SMT solvers.
+Run only probes expected to pass:
 
-## Interpretation
+```bash
+python3 autodeduct-support/run_micro_tests.py --kind micro_supported --run-framac --run-split --timeout 600
+```
 
-These tests are feature probes. They are not intended to prove complete support for all possible variants of a C or ACSL feature. They provide small reproducible examples for support exploration and regression testing.
+Run one probe:
 
-## Public micro-test runner
+```bash
+python3 autodeduct-support/run_micro_tests.py --case micro_int_if_helper --run-framac --run-split --timeout 600
+```
 
-This branch also contains a public-safe micro-test runner:
+The runner uses the entry point `entry` for every probe.
 
-    autodeduct-support/run_micro_tests.py
+The split pipeline is:
 
-It only reads `autodeduct-support/cases.json` and only runs cases whose module is `micro`.
+```bash
+frama-c -quiet <test-file.c>
+frama-c -saida -main entry -saida-out=tmp_inferred_source_merged.c <test-file.c>
+frama-c -isp -isp-entry-point entry tmp_inferred_source_merged.c -isp-print-file out.c
+frama-c -wp -main entry out.c
+```
 
-Example commands inside an AutoDeduct environment:
+Runner output is written under:
 
-    python3 autodeduct-support/run_micro_tests.py --run-framac
-    python3 autodeduct-support/run_micro_tests.py --run-framac --run-split --kind micro_supported --timeout 600
-    python3 autodeduct-support/run_micro_tests.py --run-framac --run-split --kind micro_expected_unsupported --timeout 600
+```text
+autodeduct-support-results/public-micro/
+```
 
-## Additional public feature probes
+## How To Interpret Results
 
-The current public micro-test set also includes additional feature probes:
+`supported_end_to_end` means the probe passed Frama-C parsing, Saida, ISP, and WP, with all reported WP goals proved.
 
-    valid_pointer_struct.c
-    enum_switch_basic.c
-    behavior_basic.c
-    array_struct_field_boundary.c
+`failed_at_func`, `failed_at_aux`, and `failed_at_wp` identify the first split-pipeline phase that did not complete successfully.
 
-These tests help distinguish simple supported C/ACSL patterns from more complex support-boundary patterns. For example, a simple array-of-struct field-access test can pass, while a stronger helper-returning-struct pattern may expose an auxiliary-inference boundary.
+For an expected boundary probe, a failure in the intended phase is useful evidence. It records a small reproducible support boundary rather than a regression by itself.
+
+For an unexpected pass, the tested pattern is smaller than the real boundary. Keep the probe, but refine the claim before using it as evidence.
+
+These probes are feature checks, not complete proofs of support for every form of a C or ACSL feature.
+
+## Future Work
+
+- Keep adding small public-safe probes when a support boundary is found.
+- Split broad probes into smaller variants so each one explains one feature.
+- Re-run the suite when AutoDeduct, Frama-C, Saida, ISP, WP, or solver versions change.
+- Keep public result summaries separate from private or source-specific reports.
