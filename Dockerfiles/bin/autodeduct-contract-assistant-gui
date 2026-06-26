@@ -236,6 +236,45 @@ HTML_PAGE = r"""<!doctype html>
       white-space: pre-wrap;
     }
     .hidden { display: none; }
+    .path-browser {
+      margin: 8px 0 14px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: white;
+      max-height: 220px;
+      overflow: auto;
+    }
+    .path-head {
+      padding: 9px 10px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--muted);
+      word-break: break-all;
+    }
+    .path-entry {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 28px 1fr auto;
+      gap: 8px;
+      align-items: center;
+      border: 0;
+      border-bottom: 1px solid var(--border);
+      border-radius: 0;
+      background: white;
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 500;
+      text-align: left;
+      cursor: pointer;
+    }
+    .path-entry:hover { background: #f4f7fb; }
+    .path-entry:last-child { border-bottom: 0; }
+    .path-kind {
+      color: var(--muted);
+      font-size: 11px;
+      text-align: right;
+      text-transform: uppercase;
+    }
     @media (max-width: 900px) {
       main { grid-template-columns: 1fr; padding: 14px; }
       textarea { min-height: 340px; }
@@ -255,6 +294,11 @@ HTML_PAGE = r"""<!doctype html>
       <input id="folder" type="file" multiple webkitdirectory>
       <label for="projectPath">Project path in container</label>
       <input id="projectPath" type="text" placeholder="/work/case-studies/case-study-gms">
+      <div class="row">
+        <button class="secondary" id="browseProjectPath">Browse Docker Path</button>
+        <button class="secondary" id="useProjectRoot">Use /project</button>
+      </div>
+      <div id="pathBrowser" class="path-browser hidden"></div>
       <label for="name">Displayed filename</label>
       <input id="name" type="text" value="input.c">
       <label for="code">C source</label>
@@ -318,6 +362,9 @@ int main(void) {
     const runEvaButton = document.getElementById("runEva");
     const runWpButton = document.getElementById("runWp");
     const copyPromptButton = document.getElementById("copyPrompt");
+    const browseProjectPathButton = document.getElementById("browseProjectPath");
+    const useProjectRootButton = document.getElementById("useProjectRoot");
+    const pathBrowser = document.getElementById("pathBrowser");
     const statusBox = document.getElementById("status");
     const pipelineBox = document.getElementById("pipeline");
     const summaryBox = document.getElementById("summary");
@@ -355,6 +402,69 @@ int main(void) {
 
     function requestProjectPath() {
       return projectPathInput.value.trim();
+    }
+
+    function renderPathBrowser(data) {
+      pathBrowser.innerHTML = "";
+      pathBrowser.classList.remove("hidden");
+
+      const head = document.createElement("div");
+      head.className = "path-head";
+      head.textContent = `Docker path: ${data.path}`;
+      pathBrowser.append(head);
+
+      if (data.parent) {
+        const parent = document.createElement("button");
+        parent.className = "path-entry";
+        parent.innerHTML = "<span>..</span><span>Parent directory</span><span class='path-kind'>dir</span>";
+        parent.addEventListener("click", () => browseProjectPath(data.parent));
+        pathBrowser.append(parent);
+      }
+
+      for (const entry of data.entries) {
+        const button = document.createElement("button");
+        button.className = "path-entry";
+        const icon = entry.is_dir ? "dir" : "src";
+        const kind = entry.is_dir ? "dir" : "file";
+        button.innerHTML = `<span>${icon}</span><span></span><span class="path-kind">${kind}</span>`;
+        button.children[1].textContent = entry.name;
+        button.addEventListener("click", () => {
+          projectPathInput.value = entry.path;
+          if (entry.is_dir) {
+            browseProjectPath(entry.path);
+          } else {
+            statusBox.textContent = `Selected Docker path: ${entry.path}`;
+          }
+        });
+        pathBrowser.append(button);
+      }
+
+      if (data.entries.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "path-head";
+        empty.textContent = "No subdirectories or C/H source files found here.";
+        pathBrowser.append(empty);
+      }
+    }
+
+    async function browseProjectPath(path) {
+      const target = path || projectPathInput.value.trim() || "/project";
+      statusBox.textContent = `Browsing Docker path ${target}...`;
+      try {
+        const response = await fetch("/api/list-path", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ project_path: target })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Could not list Docker path");
+        projectPathInput.value = data.path;
+        renderPathBrowser(data);
+        statusBox.textContent = `Showing Docker path ${data.path}.`;
+      } catch (error) {
+        statusBox.textContent = error.message;
+        renderPipeline([{status: "error", name: "Browse Docker path", detail: error.message}]);
+      }
     }
 
     function requestFiles() {
@@ -452,6 +562,11 @@ int main(void) {
 
     runEvaButton.addEventListener("click", () => runFramaC("eva"));
     runWpButton.addEventListener("click", () => runFramaC("wp"));
+    browseProjectPathButton.addEventListener("click", () => browseProjectPath());
+    useProjectRootButton.addEventListener("click", () => {
+      projectPathInput.value = "/project";
+      browseProjectPath("/project");
+    });
 
     copyPromptButton.addEventListener("click", async () => {
       await navigator.clipboard.writeText(promptBox.textContent);
@@ -595,6 +710,34 @@ def source_paths_from_project_path(project_path: str) -> tuple[Path, list[Path]]
 def has_project_path(payload: dict[str, object]) -> bool:
     project_path = payload.get("project_path")
     return isinstance(project_path, str) and bool(project_path.strip())
+
+
+def list_project_path(project_path: str | None) -> dict[str, object]:
+    path = Path(project_path or "/project").expanduser()
+    if not path.exists():
+        raise FileNotFoundError(f"Project path does not exist in the container: {path}")
+
+    current = path.parent if path.is_file() else path
+    entries = []
+    for child in sorted(current.iterdir(), key=lambda item: (not item.is_dir(), item.name.lower())):
+        is_source = child.suffix.lower() in ASSISTANT.SOURCE_SUFFIXES
+        if not child.is_dir() and not is_source:
+            continue
+        entries.append(
+            {
+                "name": child.name,
+                "path": str(child),
+                "is_dir": child.is_dir(),
+                "is_source": is_source,
+            }
+        )
+
+    parent = str(current.parent) if current.parent != current else None
+    return {
+        "path": str(current),
+        "parent": parent,
+        "entries": entries,
+    }
 
 
 def replace_project_paths(text: str, paths: list[Path], root: Path) -> str:
@@ -785,13 +928,18 @@ class ContractAssistantGuiHandler(BaseHTTPRequestHandler):
         self.wfile.write(HTML_PAGE.encode("utf-8"))
 
     def do_POST(self) -> None:
-        if self.path not in ("/api/analyze", "/api/frama-c"):
+        if self.path not in ("/api/analyze", "/api/frama-c", "/api/list-path"):
             self.send_error(HTTPStatus.NOT_FOUND)
             return
         try:
             length = int(self.headers.get("Content-Length", "0"))
             payload = json.loads(self.rfile.read(length).decode("utf-8"))
-            if self.path == "/api/analyze":
+            if self.path == "/api/list-path":
+                project_path = payload.get("project_path")
+                response = list_project_path(
+                    project_path if isinstance(project_path, str) else None
+                )
+            elif self.path == "/api/analyze":
                 include_main = bool(payload.get("include_main", False))
                 if has_project_path(payload):
                     response = analyze_project_path(str(payload["project_path"]), include_main)

@@ -171,6 +171,11 @@ In the GUI, use the mounted container path printed by the script:
 Project path in container: /project
 ```
 
+If you mounted a larger folder but only want to run one sub-example, use
+`Browse Docker Path` in the GUI. It lists the Docker/container view of the
+mounted folder, so you can click from `/project` into the exact subdirectory or
+source file you want to analyze.
+
 If port `8765` is already busy, choose another host port:
 
 ```shell

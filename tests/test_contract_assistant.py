@@ -187,6 +187,24 @@ int main(void) {
         self.assertEqual(missing_helpers, ["helper"])
         self.assertIn("helper.c", response["summary"])
 
+    def test_gui_lists_container_project_path(self):
+        gui = load_script("autodeduct_contract_assistant_gui_list_path", GUI)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / "example").mkdir()
+            (root / "main.c").write_text("int main(void) { return 0; }\n")
+            (root / "helper.h").write_text("void helper(void);\n")
+            (root / "README.md").write_text("not shown\n")
+
+            response = gui.list_project_path(str(root))
+
+        names = [entry["name"] for entry in response["entries"]]
+        self.assertEqual(response["path"], str(root))
+        self.assertIn("example", names)
+        self.assertIn("main.c", names)
+        self.assertIn("helper.h", names)
+        self.assertNotIn("README.md", names)
+
     def test_gui_frama_c_command_accepts_extra_args(self):
         gui = load_script("autodeduct_contract_assistant_gui_args", GUI)
 
