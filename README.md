@@ -119,6 +119,11 @@ When a directory is provided, the assistant builds a lightweight project-level
 call graph across the scanned files, so a contracted function in `main.c` can
 identify a missing helper contract in another `.c` file.
 
+A small case study for this behavior is available in
+`examples/contract-assistant/missing-helper-contract`. It has a contracted
+`main` function that calls an uncontracted helper, so the assistant should
+report `deposit_one` as a missing helper contract.
+
 To run the CLI helper against files in your current directory from Docker:
 
 ```shell

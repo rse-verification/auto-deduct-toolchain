@@ -14,6 +14,12 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 ASSISTANT = REPO_ROOT / "Dockerfiles" / "bin" / "autodeduct-contract-assistant"
 GUI = REPO_ROOT / "Dockerfiles" / "bin" / "autodeduct-contract-assistant-gui"
 SAMPLE = REPO_ROOT / "tests" / "contract-assistant" / "missing_helper.c"
+EXAMPLE = (
+    REPO_ROOT
+    / "examples"
+    / "contract-assistant"
+    / "missing-helper-contract"
+)
 
 
 def load_script(name, path):
@@ -91,6 +97,18 @@ int main(void) {
             for helper in report["missing_helper_contracts"]
         ]
         self.assertEqual(missing_helpers, ["helper"])
+
+    def test_example_case_study_reports_missing_helper_contract(self):
+        result = self.run_assistant("--json", str(EXAMPLE))
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        reports = json.loads(result.stdout)
+        missing_helpers = [
+            helper["name"]
+            for report in reports
+            for helper in report["missing_helper_contracts"]
+        ]
+        self.assertEqual(missing_helpers, ["deposit_one"])
 
     def test_gui_analysis_response_contains_pipeline_and_prompt(self):
         gui = load_script("autodeduct_contract_assistant_gui", GUI)
