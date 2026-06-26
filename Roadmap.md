@@ -29,6 +29,13 @@ and what the target for each version is.
   
 * Toolchain delivered in source form as a Dockerfile
 
+* Experimental contract assistant.
+
+  * Detect helper functions that are reachable from contracted functions
+    but do not have ACSL contracts.
+  * Produce an LLM-ready prompt for draft ACSL suggestions.
+  * Keep Frama-C/WP/Eva as the validation step for any suggested contract.
+
 ### Acceptance test
 
 It is possible to run the ``STEE`` codebase through the toolchain, and

@@ -87,6 +87,35 @@ Once you have built the container, you can start it
 docker run -it auto-deduct
 ```
 
+## Contract assistant
+
+The image includes an experimental helper for finding C helper functions that
+are missing ACSL contracts:
+
+```shell
+autodeduct-contract-assistant path/to/file.c
+```
+
+The assistant scans C function definitions, detects ACSL contracts immediately
+above functions, and reports helper functions that are reachable from contracted
+functions but do not have contracts themselves. This is a deterministic
+pre-check; it does not prove or generate contracts.
+
+For machine-readable output, use:
+
+```shell
+autodeduct-contract-assistant --json path/to/file.c
+```
+
+For an LLM-assisted workflow, the first supported step is to generate a prompt:
+
+```shell
+autodeduct-contract-assistant --llm-prompt contract-prompt.md path/to/file.c
+```
+
+The prompt is intended for draft ACSL suggestions only. Any suggested contract
+must still be reviewed by a human and checked with Frama-C/WP/Eva.
+
 ## Running the Frama-C GUI
 
 If you want to use the Frama-C GUI, you will need an

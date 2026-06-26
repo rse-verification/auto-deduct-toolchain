@@ -222,6 +222,8 @@ RUN . /home/dev/.profile && \
 RUN . /home/dev/.profile && \
   git clone --depth 1 https://github.com/rse-verification/auto-deduct-examples.git
 
+COPY --chmod=755 --chown=dev:dev bin/autodeduct-contract-assistant /home/dev/.local/bin/autodeduct-contract-assistant
+
 WORKDIR /home/dev
 
 # Enable use of X-server on docker host
