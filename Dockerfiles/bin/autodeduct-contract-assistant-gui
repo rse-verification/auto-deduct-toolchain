@@ -277,7 +277,6 @@ HTML_PAGE = r"""<!doctype html>
     }
     @media (max-width: 900px) {
       main { grid-template-columns: 1fr; padding: 14px; }
-      textarea { min-height: 340px; }
     }
   </style>
 </head>
@@ -288,42 +287,13 @@ HTML_PAGE = r"""<!doctype html>
   <main>
     <section>
       <h2>Input</h2>
-      <label for="file">C files</label>
-      <input id="file" type="file" accept=".c,.h,text/plain" multiple>
-      <label for="folder">Folder</label>
-      <input id="folder" type="file" multiple webkitdirectory>
       <label for="projectPath">Project path in container</label>
-      <input id="projectPath" type="text" placeholder="/work/case-studies/case-study-gms">
+      <input id="projectPath" type="text" value="/project">
       <div class="row">
         <button class="secondary" id="browseProjectPath">Browse Docker Path</button>
         <button class="secondary" id="useProjectRoot">Use /project</button>
       </div>
       <div id="pathBrowser" class="path-browser hidden"></div>
-      <label for="name">Displayed filename</label>
-      <input id="name" type="text" value="input.c">
-      <label for="code">C source</label>
-      <textarea id="code" spellcheck="false">#include &lt;limits.h&gt;
-
-int input;
-int result;
-
-void maybe_add(int *p, int flag) {
-  if (flag) {
-    *p = *p + 1;
-  }
-}
-
-/*@
-  requires INT_MIN &lt;= input &lt; INT_MAX;
-  ensures result &gt;= input;
-*/
-int main(void) {
-  int x = input;
-  maybe_add(&amp;x, input);
-  result = x;
-  return 0;
-}
-</textarea>
       <label for="framacArgs">Extra Frama-C options</label>
       <input id="framacArgs" type="text" placeholder='-cpp-extra-args="-D__GNUC__=12 -Ioriginal"'>
       <div class="row">
@@ -351,11 +321,7 @@ int main(void) {
     </section>
   </main>
   <script>
-    const fileInput = document.getElementById("file");
-    const folderInput = document.getElementById("folder");
     const projectPathInput = document.getElementById("projectPath");
-    const nameInput = document.getElementById("name");
-    const codeInput = document.getElementById("code");
     const framacArgsInput = document.getElementById("framacArgs");
     const includeMain = document.getElementById("includeMain");
     const runButton = document.getElementById("run");
@@ -371,24 +337,6 @@ int main(void) {
     const promptBox = document.getElementById("prompt");
     const framacBox = document.getElementById("framac");
     const jsonBox = document.getElementById("json");
-    let selectedFiles = [];
-
-    async function loadFileList(fileList) {
-      const files = Array.from(fileList || []);
-      selectedFiles = [];
-      for (const file of files) {
-        const filename = file.webkitRelativePath || file.name;
-        selectedFiles.push({ filename, code: await file.text() });
-      }
-      if (selectedFiles.length > 0) {
-        nameInput.value = selectedFiles[0].filename;
-        codeInput.value = selectedFiles[0].code;
-        statusBox.textContent = `Loaded ${selectedFiles.length} file(s) for analysis.`;
-      }
-    }
-
-    fileInput.addEventListener("change", () => loadFileList(fileInput.files));
-    folderInput.addEventListener("change", () => loadFileList(folderInput.files));
 
     document.querySelectorAll(".tab").forEach((button) => {
       button.addEventListener("click", () => {
@@ -401,7 +349,7 @@ int main(void) {
     });
 
     function requestProjectPath() {
-      return projectPathInput.value.trim();
+      return projectPathInput.value.trim() || "/project";
     }
 
     function renderPathBrowser(data) {
@@ -467,16 +415,6 @@ int main(void) {
       }
     }
 
-    function requestFiles() {
-      if (selectedFiles.length > 0) {
-        return selectedFiles;
-      }
-      return [{
-        filename: nameInput.value || "input.c",
-        code: codeInput.value
-      }];
-    }
-
     function renderPipeline(steps) {
       pipelineBox.innerHTML = "";
       for (const step of steps) {
@@ -507,7 +445,6 @@ int main(void) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            files: requestFiles(),
             project_path: requestProjectPath(),
             include_main: includeMain.checked
           })
@@ -539,7 +476,6 @@ int main(void) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             mode,
-            files: requestFiles(),
             project_path: requestProjectPath(),
             extra_args: framacArgsInput.value
           })

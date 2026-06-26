@@ -188,10 +188,9 @@ Then open:
 http://localhost:8781
 ```
 
-The page lets you upload or paste C code, upload several files or a folder,
-or enter a project path that already exists inside the container. A mounted
-project path is usually better for larger case studies because Frama-C can read
-the real source tree directly instead of a browser-uploaded copy.
+The page works with project paths that already exist inside the container.
+This keeps the browser focused on Docker's view of the mounted source tree,
+which is usually what Frama-C needs for larger case studies.
 
 The launcher mounts the selected local project folder as:
 
@@ -200,9 +199,8 @@ The launcher mounts the selected local project folder as:
 ```
 
 The GUI also has `Run Eva` and `Run WP` buttons. These run Frama-C on the
-selected `.c` files and show the command output. Uploaded files are written to a
-temporary project directory first; project paths are used in place. Header files
-must be available through the uploaded folder or the mounted project path.
+selected `.c` files and show the command output. Header files must be available
+through the mounted project path or through include paths passed to Frama-C.
 
 If a project needs preprocessor flags, add them in the `Extra Frama-C options`
 field. For example, if a header expects GCC macros and project-local includes:
@@ -211,10 +209,10 @@ field. For example, if a header expects GCC macros and project-local includes:
 -cpp-extra-args="-D__GNUC__=12 -Ioriginal"
 ```
 
-Missing headers must still be provided by the uploaded folder or by an include
-path. If Frama-C reports `fatal error: some_header.h: No such file or
-directory`, upload the folder containing that header or add the required
-include path through `-cpp-extra-args`.
+Missing headers must still be available in the mounted project or through an
+include path. If Frama-C reports `fatal error: some_header.h: No such file or
+directory`, mount the folder containing that header or add the required include
+path through `-cpp-extra-args`.
 
 The launcher is a convenience wrapper around Docker. The equivalent manual
 command is:

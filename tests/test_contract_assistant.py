@@ -205,6 +205,13 @@ int main(void) {
         self.assertIn("helper.h", names)
         self.assertNotIn("README.md", names)
 
+    def test_gui_uses_mounted_project_path_inputs(self):
+        gui = load_script("autodeduct_contract_assistant_gui_html", GUI)
+
+        self.assertIn("Browse Docker Path", gui.HTML_PAGE)
+        self.assertIn('value="/project"', gui.HTML_PAGE)
+        self.assertNotIn('type="file"', gui.HTML_PAGE)
+
     def test_gui_frama_c_command_accepts_extra_args(self):
         gui = load_script("autodeduct_contract_assistant_gui_args", GUI)
 
