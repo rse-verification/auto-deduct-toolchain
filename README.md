@@ -174,6 +174,18 @@ to a temporary project directory inside the container, run Frama-C on the `.c`
 files, and show the command output. Header files are carried into the temporary
 project so includes can be resolved relative to the uploaded folder layout.
 
+If a project needs preprocessor flags, add them in the `Extra Frama-C options`
+field. For example, if a header expects GCC macros and project-local includes:
+
+```text
+-cpp-extra-args="-D__GNUC__=12 -Ioriginal"
+```
+
+Missing headers must still be provided by the uploaded folder or by an include
+path. If Frama-C reports `fatal error: some_header.h: No such file or
+directory`, upload the folder containing that header or add the required
+include path through `-cpp-extra-args`.
+
 ## Running the Frama-C GUI
 
 If you want to use the Frama-C GUI, you will need an

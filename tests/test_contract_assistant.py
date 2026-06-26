@@ -138,6 +138,20 @@ int main(void) {
         self.assertIn("src/helper.c", response["summary"])
         self.assertEqual(response["pipeline"][2]["status"], "warn")
 
+    def test_gui_frama_c_command_accepts_extra_args(self):
+        gui = load_script("autodeduct_contract_assistant_gui_args", GUI)
+
+        command = gui.frama_c_command(
+            "wp",
+            [Path("/tmp/project/original/sgme.c")],
+            '-cpp-extra-args="-D__GNUC__=12 -Ioriginal"',
+        )
+
+        self.assertEqual(command[0], "frama-c")
+        self.assertIn("-wp", command)
+        self.assertIn("-cpp-extra-args=-D__GNUC__=12 -Ioriginal", command)
+        self.assertEqual(command[-1], "/tmp/project/original/sgme.c")
+
 
 if __name__ == "__main__":
     main()

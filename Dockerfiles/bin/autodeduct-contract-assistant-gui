@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shlex
 import subprocess
 import sys
 import tempfile
@@ -277,6 +278,8 @@ int main(void) {
   return 0;
 }
 </textarea>
+      <label for="framacArgs">Extra Frama-C options</label>
+      <input id="framacArgs" type="text" placeholder='-cpp-extra-args="-D__GNUC__=12 -Ioriginal"'>
       <div class="row">
         <button id="run">Run Assistant</button>
         <button class="secondary" id="runEva">Run Eva</button>
@@ -306,6 +309,7 @@ int main(void) {
     const folderInput = document.getElementById("folder");
     const nameInput = document.getElementById("name");
     const codeInput = document.getElementById("code");
+    const framacArgsInput = document.getElementById("framacArgs");
     const includeMain = document.getElementById("includeMain");
     const runButton = document.getElementById("run");
     const runEvaButton = document.getElementById("runEva");
@@ -417,7 +421,8 @@ int main(void) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             mode,
-            files: requestFiles()
+            files: requestFiles(),
+            extra_args: framacArgsInput.value
           })
         });
         const data = await response.json();
@@ -597,22 +602,35 @@ def analyze_code(filename: str, code: str, include_main: bool = False) -> dict[s
     )
 
 
-def frama_c_command(mode: str, c_files: list[Path]) -> list[str]:
+def parse_extra_args(extra_args: str | list[str] | None) -> list[str]:
+    if extra_args is None:
+        return []
+    if isinstance(extra_args, list):
+        return [str(arg) for arg in extra_args]
+    return shlex.split(extra_args)
+
+
+def frama_c_command(
+    mode: str, c_files: list[Path], extra_args: str | list[str] | None = None
+) -> list[str]:
+    parsed_extra_args = parse_extra_args(extra_args)
     if mode == "eva":
-        return ["frama-c", "-eva", *[str(path) for path in c_files]]
+        return ["frama-c", *parsed_extra_args, "-eva", *[str(path) for path in c_files]]
     if mode == "wp":
-        return ["frama-c", "-wp", *[str(path) for path in c_files]]
+        return ["frama-c", *parsed_extra_args, "-wp", *[str(path) for path in c_files]]
     raise ValueError(f"Unsupported Frama-C mode: {mode}")
 
 
-def run_frama_c(files: list[dict[str, str]], mode: str) -> dict[str, object]:
+def run_frama_c(
+    files: list[dict[str, str]], mode: str, extra_args: str | list[str] | None = None
+) -> dict[str, object]:
     with tempfile.TemporaryDirectory(prefix="autodeduct-contract-assistant-") as tmpdir:
         root = Path(tmpdir)
         written = write_project_files(files, root)
         c_files = [path for path in written if path.suffix.lower() == ".c"]
         if not c_files:
             raise ValueError("Frama-C requires at least one .c file")
-        command = frama_c_command(mode, c_files)
+        command = frama_c_command(mode, c_files, extra_args)
         try:
             completed = subprocess.run(
                 command,
@@ -713,7 +731,7 @@ class ContractAssistantGuiHandler(BaseHTTPRequestHandler):
                 response = analyze_project(files, include_main)
             else:
                 mode = str(payload.get("mode", "eva"))
-                response = run_frama_c(files, mode)
+                response = run_frama_c(files, mode, payload.get("extra_args"))
             self.send_json(response)
         except Exception as exc:
             self.send_json({"error": str(exc)}, status=HTTPStatus.BAD_REQUEST)
