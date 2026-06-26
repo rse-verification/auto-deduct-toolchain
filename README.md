@@ -146,17 +146,12 @@ must still be reviewed by a human and checked with Frama-C/WP/Eva.
 
 ### Browser UI
 
-The same pre-check can be run through a small local browser UI. When running
-from Docker, publish the UI port and bind the server to all container
-interfaces:
+The same pre-check can be run through a small local browser UI. The easiest way
+to use it with a real project is the host-side launcher script, which mounts a
+local folder into Docker and starts the GUI:
 
 ```shell
-docker run -it --rm \
-  -p 8765:8765 \
-  -v "$PWD":/work \
-  -w /work \
-  auto-deduct \
-  /usr/bin/bash -l -c 'autodeduct-contract-assistant-gui --host 0.0.0.0 --port 8765'
+scripts/autodeduct-contract-assistant-gui-docker /path/to/case-study-gms
 ```
 
 Then open:
@@ -165,16 +160,33 @@ Then open:
 http://localhost:8765
 ```
 
+In the GUI, use the mounted container path printed by the script:
+
+```text
+Project path in container: /project
+```
+
+If port `8765` is already busy, choose another host port:
+
+```shell
+scripts/autodeduct-contract-assistant-gui-docker --port 8781 /path/to/case-study-gms
+```
+
+Then open:
+
+```text
+http://localhost:8781
+```
+
 The page lets you upload or paste C code, upload several files or a folder,
 or enter a project path that already exists inside the container. A mounted
 project path is usually better for larger case studies because Frama-C can read
 the real source tree directly instead of a browser-uploaded copy.
 
-For example, if the repository is mounted with `-v "$PWD":/work`, enter a
-container path such as:
+The launcher mounts the selected local project folder as:
 
 ```text
-/work/case-studies/case-study-gms
+/project
 ```
 
 The GUI also has `Run Eva` and `Run WP` buttons. These run Frama-C on the
@@ -193,6 +205,18 @@ Missing headers must still be provided by the uploaded folder or by an include
 path. If Frama-C reports `fatal error: some_header.h: No such file or
 directory`, upload the folder containing that header or add the required
 include path through `-cpp-extra-args`.
+
+The launcher is a convenience wrapper around Docker. The equivalent manual
+command is:
+
+```shell
+docker run -it --rm \
+  -p 127.0.0.1:8765:8765 \
+  -v "/path/to/case-study-gms":/project \
+  -w /project \
+  auto-deduct:latest \
+  /usr/bin/bash -l -c 'autodeduct-contract-assistant-gui --host 0.0.0.0 --port 8765'
+```
 
 ## Running the Frama-C GUI
 
