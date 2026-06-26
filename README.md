@@ -116,6 +116,32 @@ autodeduct-contract-assistant --llm-prompt contract-prompt.md path/to/file.c
 The prompt is intended for draft ACSL suggestions only. Any suggested contract
 must still be reviewed by a human and checked with Frama-C/WP/Eva.
 
+### Browser UI
+
+The same pre-check can be run through a small local browser UI. When running
+from Docker, publish the UI port and bind the server to all container
+interfaces:
+
+```shell
+docker run -it --rm \
+  -p 8765:8765 \
+  -v "$PWD":/work \
+  -w /work \
+  auto-deduct \
+  /usr/bin/bash -l -c 'autodeduct-contract-assistant-gui --host 0.0.0.0 --port 8765'
+```
+
+Then open:
+
+```text
+http://localhost:8765
+```
+
+The page lets you upload or paste a C file, run the contract-assistant scan,
+see the pipeline status, inspect the JSON report, and copy the generated LLM
+prompt. This GUI does not run Frama-C/WP/Eva validation yet; it marks that
+pipeline step as skipped.
+
 ## Running the Frama-C GUI
 
 If you want to use the Frama-C GUI, you will need an

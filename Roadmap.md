@@ -34,6 +34,8 @@ and what the target for each version is.
   * Detect helper functions that are reachable from contracted functions
     but do not have ACSL contracts.
   * Produce an LLM-ready prompt for draft ACSL suggestions.
+  * Provide a small browser UI for running the pre-check and inspecting the
+    pipeline status.
   * Keep Frama-C/WP/Eva as the validation step for any suggested contract.
 
 ### Acceptance test
