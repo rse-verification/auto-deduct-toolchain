@@ -96,10 +96,28 @@ are missing ACSL contracts:
 autodeduct-contract-assistant path/to/file.c
 ```
 
+If you are testing this from the source branch, rebuild the image first so the
+new helper scripts are copied into `/home/dev/.local/bin`:
+
+```shell
+cd Dockerfiles
+docker build -t auto-deduct:latest -f AutoDeductDockerfile .
+```
+
 The assistant scans C function definitions, detects ACSL contracts immediately
 above functions, and reports helper functions that are reachable from contracted
 functions but do not have contracts themselves. This is a deterministic
 pre-check; it does not prove or generate contracts.
+
+To run the CLI helper against files in your current directory from Docker:
+
+```shell
+docker run -it --rm \
+  -v "$PWD":/work \
+  -w /work \
+  auto-deduct \
+  /usr/bin/bash -l -c 'autodeduct-contract-assistant path/to/file.c'
+```
 
 For machine-readable output, use:
 
