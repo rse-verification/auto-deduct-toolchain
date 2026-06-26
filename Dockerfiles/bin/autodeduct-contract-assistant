@@ -57,6 +57,7 @@ FUNCTION_DEF_RE = re.compile(
 )
 
 CALL_RE = re.compile(r"\b([A-Za-z_][A-Za-z0-9_]*)\s*\(")
+SOURCE_SUFFIXES = {".c", ".h"}
 
 
 @dataclass
@@ -231,7 +232,7 @@ def extract_calls(masked_body: str, known_functions: set[str]) -> list[str]:
     return calls
 
 
-def discover_functions(path: Path, text: str) -> list[FunctionInfo]:
+def discover_function_candidates(path: Path, text: str) -> list[FunctionInfo]:
     masked_text = mask_comments_and_strings(text)
     candidates: list[FunctionInfo] = []
     for match in FUNCTION_DEF_RE.finditer(masked_text):
@@ -254,12 +255,22 @@ def discover_functions(path: Path, text: str) -> list[FunctionInfo]:
             )
         )
 
-    known_functions = {function.name for function in candidates}
-    for function in candidates:
+    return candidates
+
+
+def populate_calls(functions: list[FunctionInfo], text: str, known_functions: set[str]) -> None:
+    masked_text = mask_comments_and_strings(text)
+    for function in functions:
         body = masked_text[function.body_start : function.end - 1]
         function.calls = [
             call for call in extract_calls(body, known_functions) if call != function.name
         ]
+
+
+def discover_functions(path: Path, text: str) -> list[FunctionInfo]:
+    candidates = discover_function_candidates(path, text)
+    known_functions = {function.name for function in candidates}
+    populate_calls(candidates, text, known_functions)
     return candidates
 
 
@@ -308,6 +319,63 @@ def analyze_file(path: Path, include_main: bool) -> FileReport:
         missing_helper_contracts=missing_helper_contracts,
         called_by=called_by,
     )
+
+
+def collect_source_paths(paths: list[Path]) -> list[Path]:
+    source_paths: list[Path] = []
+    for path in paths:
+        if path.is_dir():
+            for child in sorted(path.rglob("*")):
+                if child.is_file() and child.suffix.lower() in SOURCE_SUFFIXES:
+                    source_paths.append(child)
+        elif path.is_file():
+            source_paths.append(path)
+        else:
+            raise FileNotFoundError(path)
+    return source_paths
+
+
+def analyze_files(paths: list[Path], include_main: bool) -> list[FileReport]:
+    source_paths = collect_source_paths(paths)
+    texts = {path: path.read_text(encoding="utf-8") for path in source_paths}
+    functions_by_path = {
+        path: discover_function_candidates(path, text) for path, text in texts.items()
+    }
+    all_functions = [
+        function for functions in functions_by_path.values() for function in functions
+    ]
+    known_functions = {function.name for function in all_functions}
+    for path, functions in functions_by_path.items():
+        populate_calls(functions, texts[path], known_functions)
+
+    called_by: dict[str, list[str]] = {function.name: [] for function in all_functions}
+    for function in all_functions:
+        for called in function.calls:
+            called_by.setdefault(called, []).append(function.name)
+
+    reachable = reachable_from_contracted(all_functions)
+    reports: list[FileReport] = []
+    for path, functions in functions_by_path.items():
+        missing_contracts = [
+            function
+            for function in functions
+            if not function.has_contract and (include_main or function.name != "main")
+        ]
+        missing_helper_contracts = [
+            function
+            for function in missing_contracts
+            if function.name in reachable and (include_main or function.name != "main")
+        ]
+        reports.append(
+            FileReport(
+                path=path,
+                functions=functions,
+                missing_contracts=missing_contracts,
+                missing_helper_contracts=missing_helper_contracts,
+                called_by=called_by,
+            )
+        )
+    return reports
 
 
 def format_text_report(reports: list[FileReport]) -> str:
@@ -372,7 +440,12 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Detect C helper functions that are missing ACSL contracts."
     )
-    parser.add_argument("files", nargs="+", type=Path, help="C source files to scan")
+    parser.add_argument(
+        "files",
+        nargs="+",
+        type=Path,
+        help="C source files or directories to scan recursively",
+    )
     parser.add_argument(
         "--include-main",
         action="store_true",
@@ -399,7 +472,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
 
 def main(argv: list[str]) -> int:
     args = parse_args(argv)
-    reports = [analyze_file(path, args.include_main) for path in args.files]
+    reports = analyze_files(args.files, args.include_main)
 
     if args.llm_prompt is not None:
         args.llm_prompt.write_text(format_llm_prompt(reports), encoding="utf-8")

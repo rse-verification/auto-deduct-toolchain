@@ -61,18 +61,82 @@ class ContractAssistantTests(TestCase):
             self.assertIn("Frama-C/WP/Eva", prompt)
             self.assertIn("void maybe_add", prompt)
 
+    def test_accepts_directory_with_cross_file_helper_call(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / "helper.c").write_text(
+                "void helper(int *p) { *p = *p + 1; }\n",
+                encoding="utf-8",
+            )
+            (root / "main.c").write_text(
+                """int value;
+/*@
+  ensures value >= 0;
+*/
+int main(void) {
+  helper(&value);
+  return 0;
+}
+""",
+                encoding="utf-8",
+            )
+
+            result = self.run_assistant("--json", str(root))
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        reports = json.loads(result.stdout)
+        missing_helpers = [
+            helper["name"]
+            for report in reports
+            for helper in report["missing_helper_contracts"]
+        ]
+        self.assertEqual(missing_helpers, ["helper"])
+
     def test_gui_analysis_response_contains_pipeline_and_prompt(self):
         gui = load_script("autodeduct_contract_assistant_gui", GUI)
 
         response = gui.analyze_code("missing_helper.c", SAMPLE.read_text(), False)
 
         self.assertEqual(response["status"], "Analysis complete.")
-        self.assertEqual(response["report"]["file"], "missing_helper.c")
+        self.assertEqual(response["report"][0]["file"], "missing_helper.c")
         self.assertIn("maybe_add", response["summary"])
         self.assertIn("Missing helper function: maybe_add", response["llm_prompt"])
         helper_step = response["pipeline"][2]
         self.assertEqual(helper_step["name"], "Check helper contracts")
         self.assertEqual(helper_step["status"], "warn")
+
+    def test_gui_analysis_accepts_multiple_files(self):
+        gui = load_script("autodeduct_contract_assistant_gui_multi", GUI)
+        files = [
+            {
+                "filename": "src/helper.c",
+                "code": "void helper(int *p) { *p = *p + 1; }\n",
+            },
+            {
+                "filename": "src/main.c",
+                "code": """int value;
+/*@
+  ensures value >= 0;
+*/
+int main(void) {
+  helper(&value);
+  return 0;
+}
+""",
+            },
+            {"filename": "include/helper.h", "code": "void helper(int *p);\n"},
+        ]
+
+        response = gui.analyze_project(files, False)
+
+        missing_helpers = [
+            helper["name"]
+            for report in response["report"]
+            for helper in report["missing_helper_contracts"]
+        ]
+        self.assertEqual(missing_helpers, ["helper"])
+        self.assertIn("src/helper.c", response["summary"])
+        self.assertEqual(response["pipeline"][2]["status"], "warn")
 
 
 if __name__ == "__main__":

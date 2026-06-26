@@ -20,13 +20,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 import sys
 import tempfile
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from importlib.machinery import SourceFileLoader
 from importlib.util import module_from_spec, spec_from_loader
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 
 def load_assistant_module():
@@ -247,8 +248,10 @@ HTML_PAGE = r"""<!doctype html>
   <main>
     <section>
       <h2>Input</h2>
-      <label for="file">C file</label>
-      <input id="file" type="file" accept=".c,.h,text/plain">
+      <label for="file">C files</label>
+      <input id="file" type="file" accept=".c,.h,text/plain" multiple>
+      <label for="folder">Folder</label>
+      <input id="folder" type="file" multiple webkitdirectory>
       <label for="name">Displayed filename</label>
       <input id="name" type="text" value="input.c">
       <label for="code">C source</label>
@@ -276,6 +279,8 @@ int main(void) {
 </textarea>
       <div class="row">
         <button id="run">Run Assistant</button>
+        <button class="secondary" id="runEva">Run Eva</button>
+        <button class="secondary" id="runWp">Run WP</button>
         <button class="secondary" id="copyPrompt" disabled>Copy LLM Prompt</button>
         <label class="check"><input id="includeMain" type="checkbox"> include main in missing-contract list</label>
       </div>
@@ -287,42 +292,69 @@ int main(void) {
       <div class="tabs">
         <button class="tab active" data-tab="summary">Summary</button>
         <button class="tab" data-tab="prompt">LLM Prompt</button>
+        <button class="tab" data-tab="framac">Frama-C Output</button>
         <button class="tab" data-tab="json">JSON</button>
       </div>
       <pre id="summary"></pre>
       <pre id="prompt" class="hidden"></pre>
+      <pre id="framac" class="hidden"></pre>
       <pre id="json" class="hidden"></pre>
     </section>
   </main>
   <script>
     const fileInput = document.getElementById("file");
+    const folderInput = document.getElementById("folder");
     const nameInput = document.getElementById("name");
     const codeInput = document.getElementById("code");
     const includeMain = document.getElementById("includeMain");
     const runButton = document.getElementById("run");
+    const runEvaButton = document.getElementById("runEva");
+    const runWpButton = document.getElementById("runWp");
     const copyPromptButton = document.getElementById("copyPrompt");
     const statusBox = document.getElementById("status");
     const pipelineBox = document.getElementById("pipeline");
     const summaryBox = document.getElementById("summary");
     const promptBox = document.getElementById("prompt");
+    const framacBox = document.getElementById("framac");
     const jsonBox = document.getElementById("json");
+    let selectedFiles = [];
 
-    fileInput.addEventListener("change", async () => {
-      const file = fileInput.files[0];
-      if (!file) return;
-      nameInput.value = file.name;
-      codeInput.value = await file.text();
-    });
+    async function loadFileList(fileList) {
+      const files = Array.from(fileList || []);
+      selectedFiles = [];
+      for (const file of files) {
+        const filename = file.webkitRelativePath || file.name;
+        selectedFiles.push({ filename, code: await file.text() });
+      }
+      if (selectedFiles.length > 0) {
+        nameInput.value = selectedFiles[0].filename;
+        codeInput.value = selectedFiles[0].code;
+        statusBox.textContent = `Loaded ${selectedFiles.length} file(s) for analysis.`;
+      }
+    }
+
+    fileInput.addEventListener("change", () => loadFileList(fileInput.files));
+    folderInput.addEventListener("change", () => loadFileList(folderInput.files));
 
     document.querySelectorAll(".tab").forEach((button) => {
       button.addEventListener("click", () => {
         document.querySelectorAll(".tab").forEach((tab) => tab.classList.remove("active"));
         button.classList.add("active");
-        for (const id of ["summary", "prompt", "json"]) {
+        for (const id of ["summary", "prompt", "framac", "json"]) {
           document.getElementById(id).classList.toggle("hidden", id !== button.dataset.tab);
         }
       });
     });
+
+    function requestFiles() {
+      if (selectedFiles.length > 0) {
+        return selectedFiles;
+      }
+      return [{
+        filename: nameInput.value || "input.c",
+        code: codeInput.value
+      }];
+    }
 
     function renderPipeline(steps) {
       pipelineBox.innerHTML = "";
@@ -354,8 +386,7 @@ int main(void) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            filename: nameInput.value || "input.c",
-            code: codeInput.value,
+            files: requestFiles(),
             include_main: includeMain.checked
           })
         });
@@ -375,6 +406,39 @@ int main(void) {
       }
     });
 
+    async function runFramaC(mode) {
+      runEvaButton.disabled = true;
+      runWpButton.disabled = true;
+      framacBox.textContent = "";
+      statusBox.textContent = `Running Frama-C ${mode.toUpperCase()}...`;
+      try {
+        const response = await fetch("/api/frama-c", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            mode,
+            files: requestFiles()
+          })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Frama-C run failed");
+        statusBox.textContent = data.status;
+        renderPipeline(data.pipeline);
+        framacBox.textContent = data.output;
+        jsonBox.textContent = JSON.stringify(data, null, 2);
+        document.querySelector('[data-tab="framac"]').click();
+      } catch (error) {
+        statusBox.textContent = error.message;
+        renderPipeline([{status: "error", name: "Frama-C request", detail: error.message}]);
+      } finally {
+        runEvaButton.disabled = false;
+        runWpButton.disabled = false;
+      }
+    }
+
+    runEvaButton.addEventListener("click", () => runFramaC("eva"));
+    runWpButton.addEventListener("click", () => runFramaC("wp"));
+
     copyPromptButton.addEventListener("click", async () => {
       await navigator.clipboard.writeText(promptBox.textContent);
       statusBox.textContent = "LLM prompt copied.";
@@ -385,15 +449,20 @@ int main(void) {
 """
 
 
-def pipeline_for_report(report: object) -> list[dict[str, str]]:
-    functions = report.functions
+def pipeline_for_reports(reports: list[object]) -> list[dict[str, str]]:
+    functions = [function for report in reports for function in report.functions]
     contracted = [function for function in functions if function.has_contract]
-    missing_helpers = report.missing_helper_contracts
+    missing_helpers = [
+        function for report in reports for function in report.missing_helper_contracts
+    ]
     return [
         {
             "status": "ok" if functions else "warn",
-            "name": "Scan C source",
-            "detail": f"Found {len(functions)} function definition(s).",
+            "name": "Scan C project",
+            "detail": (
+                f"Found {len(functions)} function definition(s) "
+                f"in {len(reports)} source file(s)."
+            ),
         },
         {
             "status": "ok" if contracted else "warn",
@@ -421,27 +490,200 @@ def pipeline_for_report(report: object) -> list[dict[str, str]]:
         {
             "status": "skip",
             "name": "Frama-C/WP/Eva validation",
-            "detail": "Validation is not run by this GUI slice yet.",
+            "detail": "Validation runs only when the Eva or WP button is pressed.",
         },
     ]
 
 
-def analyze_code(filename: str, code: str, include_main: bool = False) -> dict[str, object]:
-    safe_name = Path(filename or "input.c").name or "input.c"
-    with tempfile.TemporaryDirectory(prefix="autodeduct-contract-assistant-") as tmpdir:
-        path = Path(tmpdir) / safe_name
+def pipeline_for_report(report: object) -> list[dict[str, str]]:
+    return pipeline_for_reports([report])
+
+
+def safe_relative_path(filename: str) -> Path:
+    raw_parts = PurePosixPath(filename.replace("\\", "/")).parts
+    parts = [
+        part
+        for part in raw_parts
+        if part not in ("", ".", "..", "/") and not part.endswith(":")
+    ]
+    if not parts:
+        return Path("input.c")
+    return Path(*parts)
+
+
+def payload_files(payload: dict[str, object]) -> list[dict[str, str]]:
+    files = payload.get("files")
+    if isinstance(files, list):
+        result = []
+        for item in files:
+            if not isinstance(item, dict):
+                continue
+            filename = item.get("filename", "input.c")
+            code = item.get("code", "")
+            if isinstance(filename, str) and isinstance(code, str):
+                result.append({"filename": filename, "code": code})
+        if result:
+            return result
+
+    filename = payload.get("filename", "input.c")
+    code = payload.get("code", "")
+    if not isinstance(filename, str) or not isinstance(code, str):
+        raise ValueError("C source is empty")
+    return [{"filename": filename, "code": code}]
+
+
+def write_project_files(files: list[dict[str, str]], root: Path) -> list[Path]:
+    written: list[Path] = []
+    for item in files:
+        code = item["code"]
+        if not code.strip():
+            continue
+        path = root / safe_relative_path(item["filename"])
+        path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(code, encoding="utf-8")
-        report = ASSISTANT.analyze_file(path, include_main)
-        text_report = ASSISTANT.format_text_report([report])
-        llm_prompt = ASSISTANT.format_llm_prompt([report])
-        report_json = report.to_json()
-        report_json["file"] = safe_name
+        written.append(path)
+    if not written:
+        raise ValueError("C source is empty")
+    return written
+
+
+def display_path(path: Path, root: Path) -> str:
+    try:
+        return str(path.relative_to(root))
+    except ValueError:
+        return path.name
+
+
+def display_reports(reports: list[object], root: Path) -> list[dict[str, object]]:
+    result = []
+    for report in reports:
+        item = report.to_json()
+        item["file"] = display_path(report.path, root)
+        result.append(item)
+    return result
+
+
+def replace_project_paths(text: str, paths: list[Path], root: Path) -> str:
+    updated = text
+    for path in paths:
+        updated = updated.replace(str(path), display_path(path, root))
+    return updated
+
+
+def analyze_project(files: list[dict[str, str]], include_main: bool = False) -> dict[str, object]:
+    with tempfile.TemporaryDirectory(prefix="autodeduct-contract-assistant-") as tmpdir:
+        root = Path(tmpdir)
+        written = write_project_files(files, root)
+        source_paths = [
+            path for path in written if path.suffix.lower() in ASSISTANT.SOURCE_SUFFIXES
+        ]
+        if not source_paths:
+            raise ValueError("No .c or .h source files were provided")
+        reports = ASSISTANT.analyze_files(source_paths, include_main)
+        text_report = ASSISTANT.format_text_report(reports)
+        llm_prompt = ASSISTANT.format_llm_prompt(reports)
         return {
             "status": "Analysis complete.",
-            "pipeline": pipeline_for_report(report),
-            "summary": text_report.replace(str(path), safe_name),
-            "llm_prompt": llm_prompt.replace(str(path), safe_name),
-            "report": report_json,
+            "pipeline": pipeline_for_reports(reports),
+            "summary": replace_project_paths(text_report, source_paths, root),
+            "llm_prompt": replace_project_paths(llm_prompt, source_paths, root),
+            "report": display_reports(reports, root),
+        }
+
+
+def analyze_code(filename: str, code: str, include_main: bool = False) -> dict[str, object]:
+    return analyze_project(
+        [{"filename": filename or "input.c", "code": code}], include_main
+    )
+
+
+def frama_c_command(mode: str, c_files: list[Path]) -> list[str]:
+    if mode == "eva":
+        return ["frama-c", "-eva", *[str(path) for path in c_files]]
+    if mode == "wp":
+        return ["frama-c", "-wp", *[str(path) for path in c_files]]
+    raise ValueError(f"Unsupported Frama-C mode: {mode}")
+
+
+def run_frama_c(files: list[dict[str, str]], mode: str) -> dict[str, object]:
+    with tempfile.TemporaryDirectory(prefix="autodeduct-contract-assistant-") as tmpdir:
+        root = Path(tmpdir)
+        written = write_project_files(files, root)
+        c_files = [path for path in written if path.suffix.lower() == ".c"]
+        if not c_files:
+            raise ValueError("Frama-C requires at least one .c file")
+        command = frama_c_command(mode, c_files)
+        try:
+            completed = subprocess.run(
+                command,
+                cwd=root,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                timeout=120,
+                check=False,
+            )
+            raw_output = completed.stdout
+        except FileNotFoundError:
+            return {
+                "status": "Frama-C is not installed in this environment.",
+                "pipeline": [
+                    {
+                        "status": "ok",
+                        "name": "Write project files",
+                        "detail": f"Wrote {len(written)} file(s).",
+                    },
+                    {
+                        "status": "error",
+                        "name": f"Run Frama-C {mode.upper()}",
+                        "detail": "Could not find the frama-c executable.",
+                    },
+                ],
+                "command": command,
+                "returncode": 127,
+                "output": "frama-c executable not found\n",
+            }
+        except subprocess.TimeoutExpired as exc:
+            raw_output = exc.stdout or ""
+            if isinstance(raw_output, bytes):
+                raw_output = raw_output.decode("utf-8", errors="replace")
+            returncode = 124
+            status = "Frama-C run timed out."
+        else:
+            returncode = completed.returncode
+            status = (
+                f"Frama-C {mode.upper()} completed."
+                if returncode == 0
+                else f"Frama-C {mode.upper()} exited with status {returncode}."
+            )
+
+        display_command = [
+            display_path(Path(arg), root) if str(arg).startswith(str(root)) else arg
+            for arg in command
+        ]
+        output = "$ " + " ".join(display_command) + "\n\n" + raw_output
+        return {
+            "status": status,
+            "pipeline": [
+                {
+                    "status": "ok",
+                    "name": "Write project files",
+                    "detail": f"Wrote {len(written)} file(s).",
+                },
+                {
+                    "status": "ok" if c_files else "warn",
+                    "name": "Select C inputs",
+                    "detail": f"Running on {len(c_files)} .c file(s).",
+                },
+                {
+                    "status": "ok" if returncode == 0 else "warn",
+                    "name": f"Run Frama-C {mode.upper()}",
+                    "detail": f"Exit status {returncode}.",
+                },
+            ],
+            "command": display_command,
+            "returncode": returncode,
+            "output": output,
         }
 
 
@@ -459,18 +701,19 @@ class ContractAssistantGuiHandler(BaseHTTPRequestHandler):
         self.wfile.write(HTML_PAGE.encode("utf-8"))
 
     def do_POST(self) -> None:
-        if self.path != "/api/analyze":
+        if self.path not in ("/api/analyze", "/api/frama-c"):
             self.send_error(HTTPStatus.NOT_FOUND)
             return
         try:
             length = int(self.headers.get("Content-Length", "0"))
             payload = json.loads(self.rfile.read(length).decode("utf-8"))
-            code = payload.get("code", "")
-            if not isinstance(code, str) or not code.strip():
-                raise ValueError("C source is empty")
-            filename = payload.get("filename", "input.c")
-            include_main = bool(payload.get("include_main", False))
-            response = analyze_code(str(filename), code, include_main)
+            files = payload_files(payload)
+            if self.path == "/api/analyze":
+                include_main = bool(payload.get("include_main", False))
+                response = analyze_project(files, include_main)
+            else:
+                mode = str(payload.get("mode", "eva"))
+                response = run_frama_c(files, mode)
             self.send_json(response)
         except Exception as exc:
             self.send_json({"error": str(exc)}, status=HTTPStatus.BAD_REQUEST)

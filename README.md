@@ -96,6 +96,13 @@ are missing ACSL contracts:
 autodeduct-contract-assistant path/to/file.c
 ```
 
+You can also pass several files or a directory. Directories are scanned
+recursively for `.c` and `.h` files:
+
+```shell
+autodeduct-contract-assistant path/to/case-study
+```
+
 If you are testing this from the source branch, rebuild the image first so the
 new helper scripts are copied into `/home/dev/.local/bin`:
 
@@ -108,6 +115,9 @@ The assistant scans C function definitions, detects ACSL contracts immediately
 above functions, and reports helper functions that are reachable from contracted
 functions but do not have contracts themselves. This is a deterministic
 pre-check; it does not prove or generate contracts.
+When a directory is provided, the assistant builds a lightweight project-level
+call graph across the scanned files, so a contracted function in `main.c` can
+identify a missing helper contract in another `.c` file.
 
 To run the CLI helper against files in your current directory from Docker:
 
@@ -116,7 +126,7 @@ docker run -it --rm \
   -v "$PWD":/work \
   -w /work \
   auto-deduct \
-  /usr/bin/bash -l -c 'autodeduct-contract-assistant path/to/file.c'
+  /usr/bin/bash -l -c 'autodeduct-contract-assistant path/to/case-study'
 ```
 
 For machine-readable output, use:
@@ -155,10 +165,14 @@ Then open:
 http://localhost:8765
 ```
 
-The page lets you upload or paste a C file, run the contract-assistant scan,
-see the pipeline status, inspect the JSON report, and copy the generated LLM
-prompt. This GUI does not run Frama-C/WP/Eva validation yet; it marks that
-pipeline step as skipped.
+The page lets you upload or paste C code, upload several files or a folder,
+run the contract-assistant scan, see the pipeline status, inspect the JSON
+report, and copy the generated LLM prompt.
+
+The GUI also has `Run Eva` and `Run WP` buttons. These write the uploaded files
+to a temporary project directory inside the container, run Frama-C on the `.c`
+files, and show the command output. Header files are carried into the temporary
+project so includes can be resolved relative to the uploaded folder layout.
 
 ## Running the Frama-C GUI
 
