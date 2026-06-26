@@ -166,13 +166,21 @@ http://localhost:8765
 ```
 
 The page lets you upload or paste C code, upload several files or a folder,
-run the contract-assistant scan, see the pipeline status, inspect the JSON
-report, and copy the generated LLM prompt.
+or enter a project path that already exists inside the container. A mounted
+project path is usually better for larger case studies because Frama-C can read
+the real source tree directly instead of a browser-uploaded copy.
 
-The GUI also has `Run Eva` and `Run WP` buttons. These write the uploaded files
-to a temporary project directory inside the container, run Frama-C on the `.c`
-files, and show the command output. Header files are carried into the temporary
-project so includes can be resolved relative to the uploaded folder layout.
+For example, if the repository is mounted with `-v "$PWD":/work`, enter a
+container path such as:
+
+```text
+/work/case-studies/case-study-gms
+```
+
+The GUI also has `Run Eva` and `Run WP` buttons. These run Frama-C on the
+selected `.c` files and show the command output. Uploaded files are written to a
+temporary project directory first; project paths are used in place. Header files
+must be available through the uploaded folder or the mounted project path.
 
 If a project needs preprocessor flags, add them in the `Extra Frama-C options`
 field. For example, if a header expects GCC macros and project-local includes:

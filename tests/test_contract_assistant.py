@@ -138,6 +138,37 @@ int main(void) {
         self.assertIn("src/helper.c", response["summary"])
         self.assertEqual(response["pipeline"][2]["status"], "warn")
 
+    def test_gui_analysis_accepts_project_path(self):
+        gui = load_script("autodeduct_contract_assistant_gui_path", GUI)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / "helper.c").write_text(
+                "void helper(int *p) { *p = *p + 1; }\n",
+                encoding="utf-8",
+            )
+            (root / "main.c").write_text(
+                """int value;
+/*@
+  ensures value >= 0;
+*/
+int main(void) {
+  helper(&value);
+  return 0;
+}
+""",
+                encoding="utf-8",
+            )
+
+            response = gui.analyze_project_path(str(root), False)
+
+        missing_helpers = [
+            helper["name"]
+            for report in response["report"]
+            for helper in report["missing_helper_contracts"]
+        ]
+        self.assertEqual(missing_helpers, ["helper"])
+        self.assertIn("helper.c", response["summary"])
+
     def test_gui_frama_c_command_accepts_extra_args(self):
         gui = load_script("autodeduct_contract_assistant_gui_args", GUI)
 
