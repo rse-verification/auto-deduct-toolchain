@@ -120,6 +120,68 @@ When a directory is provided, the assistant builds a lightweight project-level
 call graph across the scanned files, so a contracted function in `main.c` can
 identify a missing helper contract in another `.c` file.
 
+### Contract assistant architecture
+
+The contract assistant is a thin workflow layer around Frama-C/ISP, the local
+source files, and optional LLM draft generation:
+
+```text
+Host project folder
+  |
+  | mounted by scripts/autodeduct-contract-assistant-gui-docker
+  v
+AutoDeduct Docker container (/project)
+  |
+  +-- CLI: autodeduct-contract-assistant
+  |
+  +-- GUI: autodeduct-contract-assistant-gui
+        |
+        +-- Browse mounted Docker path
+        +-- Run missing-helper analysis
+        +-- Run Eva / WP
+        +-- Generate editable LLM contract draft
+```
+
+The missing-helper analysis has two backends:
+
+```text
+C source files + headers + Frama-C options
+  |
+  v
+backend=auto
+  |
+  +-- preferred: Frama-C + ISP
+  |       |
+  |       +-- ISP writes missing-helper JSON
+  |       +-- AutoDeduct maps JSON entries back to source snippets
+  |
+  +-- fallback: built-in source scan
+          |
+          +-- Lightweight function and call graph scan
+          +-- Used when Frama-C/ISP cannot parse the project yet
+```
+
+The LLM step is optional and draft-only:
+
+```text
+Missing helper list + source snippets
+  |
+  v
+OpenAI API, if OPENAI_API_KEY is set
+  |
+  v
+Editable ACSL draft JSON in the GUI
+  |
+  v
+Temporary copy of the project
+  |
+  v
+Frama-C/WP or Eva validation
+```
+
+The original mounted source files are not modified by the GUI draft flow.
+Draft contracts are inserted only into a temporary copy used for validation.
+
 The backend can be selected explicitly:
 
 ```shell
