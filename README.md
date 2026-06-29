@@ -87,6 +87,175 @@ Once you have built the container, you can start it
 docker run -it auto-deduct
 ```
 
+## Contract assistant
+
+The image includes an experimental helper for finding C helper functions that
+are missing ACSL contracts:
+
+```shell
+autodeduct-contract-assistant path/to/file.c
+```
+
+You can also pass several files or a directory. Directories are scanned
+recursively for `.c` and `.h` files:
+
+```shell
+autodeduct-contract-assistant path/to/case-study
+```
+
+If you are testing this from the source branch, rebuild the image first so the
+new helper scripts are copied into `/home/dev/.local/bin`:
+
+```shell
+cd Dockerfiles
+docker build -t auto-deduct:latest -f AutoDeductDockerfile .
+```
+
+The assistant scans C function definitions, detects ACSL contracts immediately
+above functions, and reports helper functions that are reachable from contracted
+functions but do not have contracts themselves. This is a deterministic
+pre-check; it does not prove or generate contracts.
+When a directory is provided, the assistant builds a lightweight project-level
+call graph across the scanned files, so a contracted function in `main.c` can
+identify a missing helper contract in another `.c` file.
+
+Case-study sources are intentionally kept outside this toolchain repository.
+Pass a local case-study path directly to the assistant, or mount that path into
+Docker when using the container.
+
+To run the CLI helper against files in your current directory from Docker:
+
+```shell
+docker run -it --rm \
+  -v "$PWD":/work \
+  -w /work \
+  auto-deduct \
+  /usr/bin/bash -l -c 'autodeduct-contract-assistant path/to/case-study'
+```
+
+For machine-readable output, use:
+
+```shell
+autodeduct-contract-assistant --json path/to/file.c
+```
+
+For an LLM-assisted workflow, the first supported step is to generate a prompt:
+
+```shell
+autodeduct-contract-assistant --llm-prompt contract-prompt.md path/to/file.c
+```
+
+The prompt is intended for draft ACSL suggestions only. Any suggested contract
+must still be reviewed by a human and checked with Frama-C/WP/Eva.
+
+### Browser UI
+
+The same pre-check can be run through a small local browser UI. The easiest way
+to use it with a real project is the host-side launcher script, which mounts a
+local folder into Docker and starts the GUI:
+
+```shell
+scripts/autodeduct-contract-assistant-gui-docker /path/to/case-study-gms
+```
+
+Then open:
+
+```text
+http://localhost:8765
+```
+
+In the GUI, use the mounted container path printed by the script:
+
+```text
+Project path in container: /project
+```
+
+If you mounted a larger folder but only want to run one sub-example, use
+`Browse Docker Path` in the GUI. It lists the Docker/container view of the
+mounted folder, so you can click from `/project` into the exact subdirectory or
+source file you want to analyze.
+
+If port `8765` is already busy, choose another host port:
+
+```shell
+scripts/autodeduct-contract-assistant-gui-docker --port 8781 /path/to/case-study-gms
+```
+
+Then open:
+
+```text
+http://localhost:8781
+```
+
+The page works with project paths that already exist inside the container.
+This keeps the browser focused on Docker's view of the mounted source tree,
+which is usually what Frama-C needs for larger case studies.
+
+The launcher mounts the selected local project folder as:
+
+```text
+/project
+```
+
+The GUI also has `Run Eva` and `Run WP` buttons. These run Frama-C on the
+selected `.c` files and show the command output. Header files must be available
+through the mounted project path or through include paths passed to Frama-C.
+
+The GUI can optionally call the OpenAI API to draft ACSL contracts for missing
+helper functions. The API key is read only from the environment and is not
+stored in the repository. This is a runtime setting for the GUI container; it is
+not used by `docker build`.
+
+On macOS with `zsh`, provide the key after building the image and before
+starting the GUI:
+
+```shell
+read -rs "OPENAI_API_KEY?OpenAI API key: "
+echo
+export OPENAI_API_KEY
+export OPENAI_MODEL=gpt-4.1
+```
+
+In `bash`, the equivalent prompt is:
+
+```shell
+read -rsp "OpenAI API key: " OPENAI_API_KEY
+echo
+export OPENAI_API_KEY
+export OPENAI_MODEL=gpt-4.1
+```
+
+Then start the GUI with the launcher as usual. The launcher passes
+`OPENAI_API_KEY` and `OPENAI_MODEL` into Docker with environment variables. Use
+`Generate Contract Draft` to ask the model for candidate contracts. The draft is
+shown as editable JSON; use `Run WP with Draft` to approve it for a verification
+attempt. Draft contracts are inserted only into a temporary copy of the mounted
+project, so the original source files are not modified.
+
+If a project needs preprocessor flags, add them in the `Extra Frama-C options`
+field. For example, if a header expects GCC macros and project-local includes:
+
+```text
+-cpp-extra-args="-D__GNUC__=12 -Ioriginal"
+```
+
+Missing headers must still be available in the mounted project or through an
+include path. If Frama-C reports `fatal error: some_header.h: No such file or
+directory`, mount the folder containing that header or add the required include
+path through `-cpp-extra-args`.
+
+The launcher is a convenience wrapper around Docker. The equivalent manual
+command is:
+
+```shell
+docker run -it --rm \
+  -p 127.0.0.1:8765:8765 \
+  -v "/path/to/case-study-gms":/project \
+  -w /project \
+  auto-deduct:latest \
+  /usr/bin/bash -l -c 'autodeduct-contract-assistant-gui --host 0.0.0.0 --port 8765'
+```
+
 ## Running the Frama-C GUI
 
 If you want to use the Frama-C GUI, you will need an
