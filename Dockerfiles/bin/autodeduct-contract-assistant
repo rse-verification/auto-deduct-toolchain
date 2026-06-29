@@ -25,8 +25,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
+import shlex
+import subprocess
 import sys
+import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -89,10 +93,13 @@ class FileReport:
     missing_contracts: list[FunctionInfo]
     missing_helper_contracts: list[FunctionInfo]
     called_by: dict[str, list[str]]
+    analysis_backend: str = "source-scan"
+    analysis_warning: str | None = None
 
     def to_json(self) -> dict[str, object]:
-        return {
+        report = {
             "file": str(self.path),
+            "analysis_backend": self.analysis_backend,
             "functions": [function.to_json() for function in self.functions],
             "missing_contracts": [
                 function.to_json() for function in self.missing_contracts
@@ -102,6 +109,9 @@ class FileReport:
             ],
             "called_by": self.called_by,
         }
+        if self.analysis_warning:
+            report["analysis_warning"] = self.analysis_warning
+        return report
 
 
 def line_of(text: str, index: int) -> int:
@@ -335,6 +345,186 @@ def reachable_from_contracted(functions: list[FunctionInfo]) -> set[tuple[Path, 
     return reachable
 
 
+def split_extra_args(extra_args: str | list[str] | None) -> list[str]:
+    if extra_args is None:
+        return []
+    if isinstance(extra_args, list):
+        return [str(arg) for arg in extra_args if str(arg)]
+    if not extra_args.strip():
+        return []
+    return shlex.split(extra_args)
+
+
+def common_source_root(source_paths: list[Path]) -> Path:
+    if not source_paths:
+        return Path.cwd()
+    parents = [str(path.resolve().parent) for path in source_paths]
+    return Path(os.path.commonpath(parents))
+
+
+def compact_command_output(output: str, limit: int = 900) -> str:
+    cleaned = output.strip()
+    if len(cleaned) <= limit:
+        return cleaned
+    return cleaned[: limit - 80].rstrip() + "\n... output truncated ..."
+
+
+def run_isp_missing_helper_report(
+    source_paths: list[Path],
+    root: Path,
+    extra_args: str | list[str] | None = None,
+) -> dict[str, object]:
+    c_paths = [path for path in source_paths if path.suffix.lower() == ".c"]
+    if not c_paths:
+        raise RuntimeError("ISP backend needs at least one .c file")
+
+    with tempfile.TemporaryDirectory(prefix="autodeduct-isp-report-") as tmpdir:
+        report_path = Path(tmpdir) / "missing-helper-contracts.json"
+        command = [
+            "frama-c",
+            "-autoload-plugins",
+            "-isp-missing-helper-contracts-json",
+            str(report_path),
+            *split_extra_args(extra_args),
+            *[str(path.resolve()) for path in c_paths],
+        ]
+        try:
+            result = subprocess.run(
+                command,
+                cwd=root,
+                check=False,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                timeout=120,
+            )
+        except FileNotFoundError as exc:
+            raise RuntimeError("frama-c was not found") from exc
+        except subprocess.TimeoutExpired as exc:
+            output = exc.stdout or ""
+            raise RuntimeError(
+                "frama-c timed out while generating the ISP missing-helper report"
+                + (f": {compact_command_output(output)}" if output else "")
+            ) from exc
+
+        if result.returncode != 0:
+            output = compact_command_output(result.stdout)
+            raise RuntimeError(
+                "frama-c could not generate the ISP missing-helper report"
+                + (f": {output}" if output else "")
+            )
+        if not report_path.exists():
+            raise RuntimeError("ISP did not write the missing-helper JSON report")
+
+        return json.loads(report_path.read_text(encoding="utf-8"))
+
+
+def path_matches_isp_file(path: Path, isp_file: object, root: Path) -> bool:
+    if not isinstance(isp_file, str) or not isp_file:
+        return False
+
+    normalized = isp_file.replace("\\", "/")
+    candidates = {
+        str(path).replace("\\", "/"),
+        str(path.resolve()).replace("\\", "/"),
+        path.name,
+    }
+    try:
+        candidates.add(str(path.resolve().relative_to(root.resolve())).replace("\\", "/"))
+    except ValueError:
+        pass
+
+    return any(candidate == normalized or candidate.endswith("/" + normalized) for candidate in candidates)
+
+
+def caller_names_from_isp_item(item: dict[str, object]) -> list[str]:
+    names: list[str] = []
+    callers = item.get("called_by", [])
+    if not isinstance(callers, list):
+        return names
+    for caller in callers:
+        if isinstance(caller, dict):
+            name = caller.get("function")
+            if isinstance(name, str):
+                append_unique(names, name)
+    return names
+
+
+def find_isp_report_function(
+    reports: list[FileReport], item: dict[str, object], root: Path
+) -> tuple[FileReport, FunctionInfo] | None:
+    name = item.get("function")
+    if not isinstance(name, str):
+        return None
+
+    line: int | None = None
+    raw_line = item.get("line")
+    if isinstance(raw_line, int):
+        line = raw_line
+
+    candidates: list[tuple[FileReport, FunctionInfo]] = []
+    for report in reports:
+        if not path_matches_isp_file(report.path, item.get("file"), root):
+            continue
+        candidates.extend(
+            (report, function)
+            for function in report.functions
+            if function.name == name
+        )
+
+    if line is not None:
+        line_matches = [
+            (report, function)
+            for report, function in candidates
+            if function.line == line
+        ]
+        if len(line_matches) == 1:
+            return line_matches[0]
+
+    if len(candidates) == 1:
+        return candidates[0]
+    return None
+
+
+def apply_isp_missing_helper_report(
+    reports: list[FileReport], isp_report: dict[str, object], root: Path
+) -> list[FileReport]:
+    raw_missing = isp_report.get("missing_helper_contracts", [])
+    if not isinstance(raw_missing, list):
+        raise RuntimeError("ISP report has no missing_helper_contracts list")
+
+    matches: list[tuple[FileReport, FunctionInfo, list[str]]] = []
+    unmatched: list[str] = []
+    for item in raw_missing:
+        if not isinstance(item, dict):
+            unmatched.append(str(item))
+            continue
+        match = find_isp_report_function(reports, item, root)
+        if match is None:
+            unmatched.append(json.dumps(item, sort_keys=True))
+            continue
+        report, function = match
+        matches.append((report, function, caller_names_from_isp_item(item)))
+
+    if unmatched:
+        raise RuntimeError(
+            "could not map ISP missing-helper report item(s) back to source scan: "
+            + "; ".join(unmatched)
+        )
+
+    for report in reports:
+        report.missing_helper_contracts = []
+        report.analysis_backend = "isp-frama-c"
+        report.analysis_warning = None
+
+    for report, function, callers in matches:
+        if function not in report.missing_helper_contracts:
+            report.missing_helper_contracts.append(function)
+        report.called_by[function.name] = callers
+
+    return reports
+
+
 def analyze_file(path: Path, include_main: bool) -> FileReport:
     text = path.read_text(encoding="utf-8")
     functions = discover_functions(path, text)
@@ -376,7 +566,7 @@ def collect_source_paths(paths: list[Path]) -> list[Path]:
     return source_paths
 
 
-def analyze_files(paths: list[Path], include_main: bool) -> list[FileReport]:
+def analyze_files_source_scan(paths: list[Path], include_main: bool) -> list[FileReport]:
     source_paths = collect_source_paths(paths)
     texts = {path: path.read_text(encoding="utf-8") for path in source_paths}
     functions_by_path = {
@@ -415,10 +605,41 @@ def analyze_files(paths: list[Path], include_main: bool) -> list[FileReport]:
     return reports
 
 
+def analyze_files(
+    paths: list[Path],
+    include_main: bool,
+    backend: str = "auto",
+    extra_args: str | list[str] | None = None,
+    root: Path | None = None,
+) -> list[FileReport]:
+    source_paths = collect_source_paths(paths)
+    reports = analyze_files_source_scan(source_paths, include_main)
+    if backend == "source":
+        return reports
+
+    analysis_root = root or common_source_root(source_paths)
+    try:
+        isp_report = run_isp_missing_helper_report(
+            source_paths, analysis_root, extra_args
+        )
+        return apply_isp_missing_helper_report(reports, isp_report, analysis_root)
+    except RuntimeError as exc:
+        if backend == "isp":
+            raise
+        warning = f"ISP/Frama-C backend unavailable; using source scan: {exc}"
+        for report in reports:
+            report.analysis_backend = "source-scan"
+            report.analysis_warning = warning
+        return reports
+
+
 def format_text_report(reports: list[FileReport]) -> str:
     lines: list[str] = ["AutoDeduct contract assistant report", ""]
     for report in reports:
         lines.append(f"File: {report.path}")
+        lines.append(f"  Analysis backend: {report.analysis_backend}")
+        if report.analysis_warning:
+            lines.append(f"  Analysis warning: {report.analysis_warning}")
         lines.append(f"  Functions found: {len(report.functions)}")
         contracted = [function.name for function in report.functions if function.has_contract]
         lines.append(
@@ -489,6 +710,25 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         help="include main when reporting functions missing contracts",
     )
     parser.add_argument(
+        "--backend",
+        choices=("auto", "source", "isp"),
+        default="auto",
+        help=(
+            "missing-helper backend: auto prefers ISP/Frama-C and falls back to "
+            "the source scan, source uses only the built-in scanner, isp requires "
+            "the ISP JSON report"
+        ),
+    )
+    parser.add_argument(
+        "--frama-c-extra-args",
+        default=None,
+        metavar="ARGS",
+        help=(
+            "extra Frama-C options for the ISP backend, for example "
+            "'-cpp-extra-args=\"-D__GNUC__=12 -Ioriginal\"'"
+        ),
+    )
+    parser.add_argument(
         "--json",
         action="store_true",
         help="print a machine-readable JSON report",
@@ -509,7 +749,12 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
 
 def main(argv: list[str]) -> int:
     args = parse_args(argv)
-    reports = analyze_files(args.files, args.include_main)
+    reports = analyze_files(
+        args.files,
+        args.include_main,
+        backend=args.backend,
+        extra_args=args.frama_c_extra_args,
+    )
 
     if args.llm_prompt is not None:
         args.llm_prompt.write_text(format_llm_prompt(reports), encoding="utf-8")

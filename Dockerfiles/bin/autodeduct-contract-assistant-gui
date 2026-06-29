@@ -485,7 +485,8 @@ HTML_PAGE = r"""<!doctype html>
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             project_path: requestProjectPath(),
-            include_main: includeMain.checked
+            include_main: includeMain.checked,
+            extra_args: framacArgsInput.value
           })
         });
         const data = await response.json();
@@ -515,7 +516,8 @@ HTML_PAGE = r"""<!doctype html>
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             project_path: requestProjectPath(),
-            include_main: includeMain.checked
+            include_main: includeMain.checked,
+            extra_args: framacArgsInput.value
           })
         });
         const data = await response.json();
@@ -605,6 +607,22 @@ def pipeline_for_reports(reports: list[object]) -> list[dict[str, str]]:
     missing_helpers = [
         function for report in reports for function in report.missing_helper_contracts
     ]
+    backends = sorted(
+        {str(getattr(report, "analysis_backend", "source-scan")) for report in reports}
+    )
+    warnings = [
+        str(getattr(report, "analysis_warning"))
+        for report in reports
+        if getattr(report, "analysis_warning", None)
+    ]
+    helper_detail = (
+        f"{len(missing_helpers)} reachable helper function(s) miss contracts."
+        if missing_helpers
+        else "No reachable helper functions are missing contracts."
+    )
+    helper_detail += f" Backend: {', '.join(backends)}."
+    if warnings:
+        helper_detail += f" Warning: {warnings[0]}"
     return [
         {
             "status": "ok" if functions else "warn",
@@ -626,11 +644,7 @@ def pipeline_for_reports(reports: list[object]) -> list[dict[str, str]]:
         {
             "status": "warn" if missing_helpers else "ok",
             "name": "Check helper contracts",
-            "detail": (
-                f"{len(missing_helpers)} reachable helper function(s) miss contracts."
-                if missing_helpers
-                else "No reachable helper functions are missing contracts."
-            ),
+            "detail": helper_detail,
         },
         {
             "status": "skip",
@@ -679,13 +693,23 @@ def list_project_path(project_path: str | None) -> dict[str, object]:
     return list_container_path(project_path, ASSISTANT.SOURCE_SUFFIXES)
 
 
-def suggest_contracts(project_path: str, include_main: bool = False) -> dict[str, object]:
+def suggest_contracts(
+    project_path: str,
+    include_main: bool = False,
+    extra_args: str | list[str] | None = None,
+) -> dict[str, object]:
     root, source_paths = source_paths_from_project_path(project_path, ASSISTANT)
-    reports = ASSISTANT.analyze_files(source_paths, include_main)
+    reports = ASSISTANT.analyze_files(
+        source_paths, include_main, extra_args=extra_args, root=root
+    )
     return suggest_contracts_from_reports(reports, root, pipeline_for_reports)
 
 
-def analyze_project(files: list[dict[str, str]], include_main: bool = False) -> dict[str, object]:
+def analyze_project(
+    files: list[dict[str, str]],
+    include_main: bool = False,
+    extra_args: str | list[str] | None = None,
+) -> dict[str, object]:
     with tempfile.TemporaryDirectory(prefix="autodeduct-contract-assistant-") as tmpdir:
         root = Path(tmpdir)
         written = write_project_files(files, root)
@@ -694,7 +718,9 @@ def analyze_project(files: list[dict[str, str]], include_main: bool = False) -> 
         ]
         if not source_paths:
             raise ValueError("No .c or .h source files were provided")
-        reports = ASSISTANT.analyze_files(source_paths, include_main)
+        reports = ASSISTANT.analyze_files(
+            source_paths, include_main, extra_args=extra_args, root=root
+        )
         text_report = ASSISTANT.format_text_report(reports)
         llm_prompt = ASSISTANT.format_llm_prompt(reports)
         return {
@@ -706,9 +732,15 @@ def analyze_project(files: list[dict[str, str]], include_main: bool = False) -> 
         }
 
 
-def analyze_project_path(project_path: str, include_main: bool = False) -> dict[str, object]:
+def analyze_project_path(
+    project_path: str,
+    include_main: bool = False,
+    extra_args: str | list[str] | None = None,
+) -> dict[str, object]:
     root, source_paths = source_paths_from_project_path(project_path, ASSISTANT)
-    reports = ASSISTANT.analyze_files(source_paths, include_main)
+    reports = ASSISTANT.analyze_files(
+        source_paths, include_main, extra_args=extra_args, root=root
+    )
     text_report = ASSISTANT.format_text_report(reports)
     llm_prompt = ASSISTANT.format_llm_prompt(reports)
     return {
@@ -770,13 +802,23 @@ class ContractAssistantGuiHandler(BaseHTTPRequestHandler):
                 include_main = bool(payload.get("include_main", False))
                 if not has_project_path(payload):
                     raise ValueError("Project path is required for LLM suggestions")
-                response = suggest_contracts(str(payload["project_path"]), include_main)
+                response = suggest_contracts(
+                    str(payload["project_path"]),
+                    include_main,
+                    payload.get("extra_args"),
+                )
             elif self.path == "/api/analyze":
                 include_main = bool(payload.get("include_main", False))
                 if has_project_path(payload):
-                    response = analyze_project_path(str(payload["project_path"]), include_main)
+                    response = analyze_project_path(
+                        str(payload["project_path"]),
+                        include_main,
+                        payload.get("extra_args"),
+                    )
                 else:
-                    response = analyze_project(payload_files(payload), include_main)
+                    response = analyze_project(
+                        payload_files(payload), include_main, payload.get("extra_args")
+                    )
             else:
                 mode = str(payload.get("mode", "eva"))
                 if has_project_path(payload):

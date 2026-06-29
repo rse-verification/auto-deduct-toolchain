@@ -111,13 +111,44 @@ cd Dockerfiles
 docker build -t auto-deduct:latest -f AutoDeductDockerfile .
 ```
 
-The assistant scans C function definitions, detects ACSL contracts immediately
-above functions, and reports helper functions that are reachable from contracted
-functions but do not have contracts themselves. This is a deterministic
-pre-check; it does not prove or generate contracts.
+By default, the assistant tries to use the ISP Frama-C plugin to generate the
+missing-helper report, then falls back to its built-in source scan if Frama-C,
+ISP, or the needed preprocessor setup is not available. The built-in scan is
+also used to extract source snippets for the report and LLM prompt. This is a
+deterministic pre-check; it does not prove or generate contracts.
 When a directory is provided, the assistant builds a lightweight project-level
 call graph across the scanned files, so a contracted function in `main.c` can
 identify a missing helper contract in another `.c` file.
+
+The backend can be selected explicitly:
+
+```shell
+autodeduct-contract-assistant --backend auto path/to/case-study
+autodeduct-contract-assistant --backend isp path/to/case-study
+autodeduct-contract-assistant --backend source path/to/case-study
+```
+
+Use `--backend isp` when you want the command to fail instead of falling back to
+the source scan. If the project needs include paths or macros before Frama-C can
+parse it, pass the same options that you would pass to Frama-C:
+
+```shell
+autodeduct-contract-assistant \
+  --frama-c-extra-args '-cpp-extra-args="-D__GNUC__=12 -Ioriginal"' \
+  path/to/case-study
+```
+
+The ISP backend requires an ISP version that provides
+`-isp-missing-helper-contracts-json`. If you are testing before that ISP change
+is released, build the image with the matching ISP branch:
+
+```shell
+cd Dockerfiles
+docker build \
+  --build-arg ISP_VER=feature/missing-helper-contract-report \
+  -t auto-deduct:latest \
+  -f AutoDeductDockerfile .
+```
 
 Case-study sources are intentionally kept outside this toolchain repository.
 Pass a local case-study path directly to the assistant, or mount that path into
@@ -198,8 +229,10 @@ The launcher mounts the selected local project folder as:
 ```
 
 The GUI also has `Run Eva` and `Run WP` buttons. These run Frama-C on the
-selected `.c` files and show the command output. Header files must be available
-through the mounted project path or through include paths passed to Frama-C.
+selected `.c` files and show the command output. The same `Extra Frama-C
+options` field is used by the ISP missing-helper backend, the Eva run, and the
+WP run. Header files must be available through the mounted project path or
+through include paths passed to Frama-C.
 
 The GUI can optionally call the OpenAI API to draft ACSL contracts for missing
 helper functions. The API key is read only from the environment and is not
