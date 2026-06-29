@@ -202,7 +202,7 @@ autodeduct-contract-assistant \
 
 The ISP backend requires an ISP version that provides
 `-isp-missing-helper-contracts-json`. If you are testing before that ISP change
-is released, build the image with the matching ISP branch:
+is released, build the image with the matching remote ISP branch:
 
 ```shell
 cd Dockerfiles
@@ -212,18 +212,83 @@ docker build \
   -f AutoDeductDockerfile .
 ```
 
+The Dockerfile does not have to use ISP `main`; it uses the `ISP_VER` build
+argument, which may be a tag, branch, or commit that Git can clone from the ISP
+repository. The default is the released version set in `AutoDeductDockerfile`.
+
+For quick local ISP experiments without pushing a branch first, mount your local
+ISP checkout into the container and install it inside that running container:
+
+```shell
+docker run -it --rm \
+  -v "/path/to/interface-specification-propagator":/isp-src \
+  -v "/path/to/case-study":/project \
+  -w /project \
+  auto-deduct:latest \
+  /usr/bin/bash -l
+
+cd /isp-src
+dune build @install
+dune install
+
+cd /project
+autodeduct-contract-assistant --backend isp .
+```
+
+That local install is only for the running container. For a reusable image,
+push the ISP branch and build AutoDeduct with `--build-arg ISP_VER=<branch>`.
+
 Case-study sources are intentionally kept outside this toolchain repository.
 Pass a local case-study path directly to the assistant, or mount that path into
 Docker when using the container.
 
-To run the CLI helper against files in your current directory from Docker:
+### Step-by-step Docker run
+
+Build the image:
+
+```shell
+cd /path/to/auto-deduct-toolchain/Dockerfiles
+docker build -t auto-deduct:latest -f AutoDeductDockerfile .
+```
+
+If you need the ISP missing-helper report before it is released, build with the
+ISP branch:
+
+```shell
+docker build \
+  --build-arg ISP_VER=feature/missing-helper-contract-report \
+  -t auto-deduct:latest \
+  -f AutoDeductDockerfile .
+```
+
+Run the CLI against a mounted project:
 
 ```shell
 docker run -it --rm \
-  -v "$PWD":/work \
-  -w /work \
-  auto-deduct \
-  /usr/bin/bash -l -c 'autodeduct-contract-assistant path/to/case-study'
+  -v "/path/to/case-study":/project \
+  -w /project \
+  auto-deduct:latest \
+  /usr/bin/bash -l -c 'autodeduct-contract-assistant --backend auto .'
+```
+
+To force the precise ISP backend and fail if Frama-C/ISP cannot run:
+
+```shell
+docker run -it --rm \
+  -v "/path/to/case-study":/project \
+  -w /project \
+  auto-deduct:latest \
+  /usr/bin/bash -l -c 'autodeduct-contract-assistant --backend isp .'
+```
+
+To use only the fallback source scanner:
+
+```shell
+docker run -it --rm \
+  -v "/path/to/case-study":/project \
+  -w /project \
+  auto-deduct:latest \
+  /usr/bin/bash -l -c 'autodeduct-contract-assistant --backend source .'
 ```
 
 For machine-readable output, use:
@@ -267,6 +332,12 @@ If you mounted a larger folder but only want to run one sub-example, use
 `Browse Docker Path` in the GUI. It lists the Docker/container view of the
 mounted folder, so you can click from `/project` into the exact subdirectory or
 source file you want to analyze.
+
+The GUI has a `Missing-helper backend` selector:
+
+* `Auto`: try ISP/Frama-C first and fall back to the source scan.
+* `ISP/Frama-C only`: fail if the ISP JSON report cannot be generated.
+* `Source scan only`: use the lightweight source scanner without Frama-C.
 
 If port `8765` is already busy, choose another host port:
 

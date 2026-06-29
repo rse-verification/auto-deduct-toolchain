@@ -131,7 +131,7 @@ HTML_PAGE = r"""<!doctype html>
       font-size: 13px;
       color: var(--muted);
     }
-    input[type="text"], textarea {
+    input[type="text"], select, textarea {
       width: 100%;
       border: 1px solid var(--border);
       border-radius: 6px;
@@ -144,6 +144,9 @@ HTML_PAGE = r"""<!doctype html>
       min-height: 480px;
       resize: vertical;
       line-height: 1.4;
+    }
+    select {
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
     .row {
       display: flex;
@@ -328,6 +331,12 @@ HTML_PAGE = r"""<!doctype html>
       <div id="pathBrowser" class="path-browser hidden"></div>
       <label for="framacArgs">Extra Frama-C options</label>
       <input id="framacArgs" type="text" placeholder='-cpp-extra-args="-D__GNUC__=12 -Ioriginal"'>
+      <label for="analysisBackend">Missing-helper backend</label>
+      <select id="analysisBackend">
+        <option value="auto">Auto: ISP/Frama-C with source-scan fallback</option>
+        <option value="isp">ISP/Frama-C only</option>
+        <option value="source">Source scan only</option>
+      </select>
       <div class="row">
         <button id="run">Run Assistant</button>
         <button class="secondary" id="generateDraft">Generate Contract Draft</button>
@@ -359,6 +368,7 @@ HTML_PAGE = r"""<!doctype html>
   <script>
     const projectPathInput = document.getElementById("projectPath");
     const framacArgsInput = document.getElementById("framacArgs");
+    const analysisBackendInput = document.getElementById("analysisBackend");
     const includeMain = document.getElementById("includeMain");
     const runButton = document.getElementById("run");
     const generateDraftButton = document.getElementById("generateDraft");
@@ -486,7 +496,8 @@ HTML_PAGE = r"""<!doctype html>
           body: JSON.stringify({
             project_path: requestProjectPath(),
             include_main: includeMain.checked,
-            extra_args: framacArgsInput.value
+            extra_args: framacArgsInput.value,
+            backend: analysisBackendInput.value
           })
         });
         const data = await response.json();
@@ -517,7 +528,8 @@ HTML_PAGE = r"""<!doctype html>
           body: JSON.stringify({
             project_path: requestProjectPath(),
             include_main: includeMain.checked,
-            extra_args: framacArgsInput.value
+            extra_args: framacArgsInput.value,
+            backend: analysisBackendInput.value
           })
         });
         const data = await response.json();
@@ -689,6 +701,15 @@ def has_project_path(payload: dict[str, object]) -> bool:
     return isinstance(project_path, str) and bool(project_path.strip())
 
 
+def analysis_backend_from_payload(payload: dict[str, object]) -> str:
+    backend = payload.get("backend", "auto")
+    if not isinstance(backend, str):
+        raise ValueError("Analysis backend must be a string")
+    if backend not in ("auto", "isp", "source"):
+        raise ValueError("Analysis backend must be one of: auto, isp, source")
+    return backend
+
+
 def list_project_path(project_path: str | None) -> dict[str, object]:
     return list_container_path(project_path, ASSISTANT.SOURCE_SUFFIXES)
 
@@ -697,10 +718,11 @@ def suggest_contracts(
     project_path: str,
     include_main: bool = False,
     extra_args: str | list[str] | None = None,
+    backend: str = "auto",
 ) -> dict[str, object]:
     root, source_paths = source_paths_from_project_path(project_path, ASSISTANT)
     reports = ASSISTANT.analyze_files(
-        source_paths, include_main, extra_args=extra_args, root=root
+        source_paths, include_main, backend=backend, extra_args=extra_args, root=root
     )
     return suggest_contracts_from_reports(reports, root, pipeline_for_reports)
 
@@ -709,6 +731,7 @@ def analyze_project(
     files: list[dict[str, str]],
     include_main: bool = False,
     extra_args: str | list[str] | None = None,
+    backend: str = "auto",
 ) -> dict[str, object]:
     with tempfile.TemporaryDirectory(prefix="autodeduct-contract-assistant-") as tmpdir:
         root = Path(tmpdir)
@@ -719,7 +742,7 @@ def analyze_project(
         if not source_paths:
             raise ValueError("No .c or .h source files were provided")
         reports = ASSISTANT.analyze_files(
-            source_paths, include_main, extra_args=extra_args, root=root
+            source_paths, include_main, backend=backend, extra_args=extra_args, root=root
         )
         text_report = ASSISTANT.format_text_report(reports)
         llm_prompt = ASSISTANT.format_llm_prompt(reports)
@@ -736,10 +759,11 @@ def analyze_project_path(
     project_path: str,
     include_main: bool = False,
     extra_args: str | list[str] | None = None,
+    backend: str = "auto",
 ) -> dict[str, object]:
     root, source_paths = source_paths_from_project_path(project_path, ASSISTANT)
     reports = ASSISTANT.analyze_files(
-        source_paths, include_main, extra_args=extra_args, root=root
+        source_paths, include_main, backend=backend, extra_args=extra_args, root=root
     )
     text_report = ASSISTANT.format_text_report(reports)
     llm_prompt = ASSISTANT.format_llm_prompt(reports)
@@ -800,24 +824,31 @@ class ContractAssistantGuiHandler(BaseHTTPRequestHandler):
                 )
             elif self.path == "/api/llm-suggest":
                 include_main = bool(payload.get("include_main", False))
+                backend = analysis_backend_from_payload(payload)
                 if not has_project_path(payload):
                     raise ValueError("Project path is required for LLM suggestions")
                 response = suggest_contracts(
                     str(payload["project_path"]),
                     include_main,
                     payload.get("extra_args"),
+                    backend,
                 )
             elif self.path == "/api/analyze":
                 include_main = bool(payload.get("include_main", False))
+                backend = analysis_backend_from_payload(payload)
                 if has_project_path(payload):
                     response = analyze_project_path(
                         str(payload["project_path"]),
                         include_main,
                         payload.get("extra_args"),
+                        backend,
                     )
                 else:
                     response = analyze_project(
-                        payload_files(payload), include_main, payload.get("extra_args")
+                        payload_files(payload),
+                        include_main,
+                        payload.get("extra_args"),
+                        backend,
                     )
             else:
                 mode = str(payload.get("mode", "eva"))

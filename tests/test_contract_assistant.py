@@ -353,6 +353,35 @@ int main(void) {
         self.assertEqual(missing_helpers, ["helper"])
         self.assertIn("helper.c", response["summary"])
 
+    def test_gui_analysis_accepts_backend_selection(self):
+        gui = load_script("autodeduct_contract_assistant_gui_backend", GUI)
+
+        response = gui.analyze_project(
+            [
+                {
+                    "filename": "helper.c",
+                    "code": "void helper(int *p) { *p = *p + 1; }\n",
+                },
+                {
+                    "filename": "main.c",
+                    "code": """int value;
+/*@
+  ensures value >= 0;
+*/
+int main(void) {
+  helper(&value);
+  return 0;
+}
+""",
+                },
+            ],
+            include_main=False,
+            backend="source",
+        )
+
+        self.assertEqual(response["report"][0]["analysis_backend"], "source-scan")
+        self.assertIn("Backend: source-scan.", response["pipeline"][2]["detail"])
+
     def test_gui_lists_container_project_path(self):
         gui = load_script("autodeduct_contract_assistant_gui_list_path", GUI)
         with tempfile.TemporaryDirectory() as tmpdir:
