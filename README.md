@@ -207,7 +207,8 @@ helper functions. The API key is read only from the environment and is not
 stored in the repository. One safe way to provide it before starting the GUI is:
 
 ```shell
-read -rsp "OpenAI API key: " OPENAI_API_KEY
+read -rs "OPENAI_API_KEY?OpenAI API key: "
+echo
 export OPENAI_API_KEY
 export OPENAI_MODEL=gpt-4.1
 ```
