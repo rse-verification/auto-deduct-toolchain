@@ -173,14 +173,16 @@ OpenAI API, if OPENAI_API_KEY is set
 Editable ACSL draft JSON in the GUI
   |
   v
-Temporary copy of the project
+Temporary copy of the project, only for Run WP with Draft
   |
   v
-Frama-C/WP or Eva validation
+Frama-C/WP draft validation
 ```
 
-The original mounted source files are not modified by the GUI draft flow.
-Draft contracts are inserted only into a temporary copy used for validation.
+The normal `Run Eva` and `Run WP` buttons run Frama-C on the mounted source
+files. The `Run WP with Draft` button is different: it inserts the edited draft
+contracts into a temporary copy and validates that copy, so the original mounted
+source files are not modified by the LLM draft flow.
 
 The backend can be selected explicitly:
 
@@ -200,43 +202,8 @@ autodeduct-contract-assistant \
   path/to/case-study
 ```
 
-The ISP backend requires an ISP version that provides
-`-isp-missing-helper-contracts-json`. If you are testing before that ISP change
-is released, build the image with the matching remote ISP branch:
-
-```shell
-cd Dockerfiles
-docker build \
-  --build-arg ISP_VER=feature/missing-helper-contract-report \
-  -t auto-deduct:latest \
-  -f AutoDeductDockerfile .
-```
-
-The Dockerfile does not have to use ISP `main`; it uses the `ISP_VER` build
-argument, which may be a tag, branch, or commit that Git can clone from the ISP
-repository. The default is the released version set in `AutoDeductDockerfile`.
-
-For quick local ISP experiments without pushing a branch first, mount your local
-ISP checkout into the container and install it inside that running container:
-
-```shell
-docker run -it --rm \
-  -v "/path/to/interface-specification-propagator":/isp-src \
-  -v "/path/to/case-study":/project \
-  -w /project \
-  auto-deduct:latest \
-  /usr/bin/bash -l
-
-cd /isp-src
-dune build @install
-dune install
-
-cd /project
-autodeduct-contract-assistant --backend isp .
-```
-
-That local install is only for the running container. For a reusable image,
-push the ISP branch and build AutoDeduct with `--build-arg ISP_VER=<branch>`.
+The ISP backend requires an AutoDeduct image that contains an ISP version
+providing `-isp-missing-helper-contracts-json`.
 
 Case-study sources are intentionally kept outside this toolchain repository.
 Pass a local case-study path directly to the assistant, or mount that path into
@@ -249,16 +216,6 @@ Build the image:
 ```shell
 cd /path/to/auto-deduct-toolchain/Dockerfiles
 docker build -t auto-deduct:latest -f AutoDeductDockerfile .
-```
-
-If you need the ISP missing-helper report before it is released, build with the
-ISP branch:
-
-```shell
-docker build \
-  --build-arg ISP_VER=feature/missing-helper-contract-report \
-  -t auto-deduct:latest \
-  -f AutoDeductDockerfile .
 ```
 
 Run the CLI against a mounted project:
