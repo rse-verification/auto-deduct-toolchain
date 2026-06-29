@@ -204,7 +204,11 @@ through the mounted project path or through include paths passed to Frama-C.
 
 The GUI can optionally call the OpenAI API to draft ACSL contracts for missing
 helper functions. The API key is read only from the environment and is not
-stored in the repository. One safe way to provide it before starting the GUI is:
+stored in the repository. This is a runtime setting for the GUI container; it is
+not used by `docker build`.
+
+On macOS with `zsh`, provide the key after building the image and before
+starting the GUI:
 
 ```shell
 read -rs "OPENAI_API_KEY?OpenAI API key: "
@@ -213,11 +217,21 @@ export OPENAI_API_KEY
 export OPENAI_MODEL=gpt-4.1
 ```
 
-Then start the GUI with the launcher as usual. Use `Generate Contract Draft` to
-ask the model for candidate contracts. The draft is shown as editable JSON; use
-`Run WP with Draft` to approve it for a verification attempt. Draft contracts
-are inserted only into a temporary copy of the mounted project, so the original
-source files are not modified.
+In `bash`, the equivalent prompt is:
+
+```shell
+read -rsp "OpenAI API key: " OPENAI_API_KEY
+echo
+export OPENAI_API_KEY
+export OPENAI_MODEL=gpt-4.1
+```
+
+Then start the GUI with the launcher as usual. The launcher passes
+`OPENAI_API_KEY` and `OPENAI_MODEL` into Docker with environment variables. Use
+`Generate Contract Draft` to ask the model for candidate contracts. The draft is
+shown as editable JSON; use `Run WP with Draft` to approve it for a verification
+attempt. Draft contracts are inserted only into a temporary copy of the mounted
+project, so the original source files are not modified.
 
 If a project needs preprocessor flags, add them in the `Extra Frama-C options`
 field. For example, if a header expects GCC macros and project-local includes:
