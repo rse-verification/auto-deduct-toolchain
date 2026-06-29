@@ -134,6 +134,8 @@ EOF
 #
 FROM auto-deduct-base AS auto-deduct-frama-c
 
+ARG FRAMA_C_VER="31.0"
+
 USER dev
 WORKDIR /home/dev
 
@@ -155,6 +157,9 @@ RUN . /home/dev/.profile && \
 # Stage 3 - Add Scala related stuff
 #
 FROM auto-deduct-frama-c AS auto-deduct-scala
+
+ARG PROXY_HOST=""
+ARG PROXY_PORT=""
 
 USER dev
 WORKDIR /home/dev
@@ -180,6 +185,8 @@ RUN curl -fLo coursierLauncher https://github.com/coursier/launchers/raw/master/
 #
 FROM auto-deduct-scala AS auto-deduct-tricera
 
+ARG TRICERA_VER="5324b60f43e3e90314a151d056e5559a0ec3d63e"
+
 USER dev
 WORKDIR /home/dev/repos
 
@@ -203,6 +210,9 @@ RUN ln -s /home/dev/repos/tricera/tri && \
 #   it after the container image has been built.
 #
 FROM auto-deduct-tricera AS auto-deduct-toolchain
+
+ARG SAIDA_VER="v0.5.0"
+ARG ISP_VER="v0.3.1"
 
 USER dev
 WORKDIR /home/dev/repos
