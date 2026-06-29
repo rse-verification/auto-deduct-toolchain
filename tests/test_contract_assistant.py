@@ -14,12 +14,6 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 ASSISTANT = REPO_ROOT / "Dockerfiles" / "bin" / "autodeduct-contract-assistant"
 GUI = REPO_ROOT / "Dockerfiles" / "bin" / "autodeduct-contract-assistant-gui"
 SAMPLE = REPO_ROOT / "tests" / "contract-assistant" / "missing_helper.c"
-EXAMPLE = (
-    REPO_ROOT
-    / "examples"
-    / "contract-assistant"
-    / "missing-helper-contract"
-)
 
 
 def load_script(name, path):
@@ -98,8 +92,39 @@ int main(void) {
         ]
         self.assertEqual(missing_helpers, ["helper"])
 
-    def test_example_case_study_reports_missing_helper_contract(self):
-        result = self.run_assistant("--json", str(EXAMPLE))
+    def test_directory_fixture_reports_domain_named_missing_helper_contract(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / "account.h").write_text(
+                "typedef struct { int balance; } Account;\n"
+                "void deposit_one(Account *account);\n",
+                encoding="utf-8",
+            )
+            (root / "account.c").write_text(
+                '#include "account.h"\n'
+                "void deposit_one(Account *account) {\n"
+                "  account->balance = account->balance + 1;\n"
+                "}\n",
+                encoding="utf-8",
+            )
+            (root / "main.c").write_text(
+                '#include "account.h"\n'
+                "int initial_balance;\n"
+                "int final_balance;\n"
+                "/*@\n"
+                "  requires initial_balance >= 0;\n"
+                "  ensures final_balance == initial_balance + 1;\n"
+                "*/\n"
+                "int main(void) {\n"
+                "  Account account = { initial_balance };\n"
+                "  deposit_one(&account);\n"
+                "  final_balance = account.balance;\n"
+                "  return 0;\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            result = self.run_assistant("--json", str(root))
 
         self.assertEqual(result.returncode, 0, result.stderr)
         reports = json.loads(result.stdout)
