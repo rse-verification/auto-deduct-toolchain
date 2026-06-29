@@ -62,6 +62,7 @@ SOURCE_SUFFIXES = {".c", ".h"}
 
 @dataclass
 class FunctionInfo:
+    path: Path
     name: str
     signature: str
     line: int
@@ -245,6 +246,7 @@ def discover_function_candidates(path: Path, text: str) -> list[FunctionInfo]:
             continue
         candidates.append(
             FunctionInfo(
+                path=path,
                 name=name,
                 signature=text[match.start("signature") : match.end("signature")],
                 line=line_of(text, match.start("name")),
@@ -274,30 +276,69 @@ def discover_functions(path: Path, text: str) -> list[FunctionInfo]:
     return candidates
 
 
-def reachable_from_contracted(functions: list[FunctionInfo]) -> set[str]:
-    by_name = {function.name: function for function in functions}
-    roots = [function.name for function in functions if function.has_contract]
-    reachable: set[str] = set()
-    worklist = list(roots)
-    while worklist:
-        current_name = worklist.pop()
-        current = by_name.get(current_name)
-        if current is None:
+def function_key(function: FunctionInfo) -> tuple[Path, int, str]:
+    return (function.path, function.start, function.name)
+
+
+def functions_by_name(functions: list[FunctionInfo]) -> dict[str, list[FunctionInfo]]:
+    by_name: dict[str, list[FunctionInfo]] = {}
+    for function in functions:
+        by_name.setdefault(function.name, []).append(function)
+    return by_name
+
+
+def resolve_call_targets(
+    caller: FunctionInfo, by_name: dict[str, list[FunctionInfo]]
+) -> list[FunctionInfo]:
+    targets: list[FunctionInfo] = []
+    for called in caller.calls:
+        candidates = by_name.get(called, [])
+        if len(candidates) == 1:
+            targets.extend(candidates)
             continue
-        for called in current.calls:
-            if called not in reachable:
-                reachable.add(called)
-                worklist.append(called)
+
+        same_file = [function for function in candidates if function.path == caller.path]
+        if len(same_file) == 1:
+            targets.extend(same_file)
+    return targets
+
+
+def append_unique(items: list[str], value: str) -> None:
+    if value not in items:
+        items.append(value)
+
+
+def called_by_for(
+    report_functions: list[FunctionInfo], all_functions: list[FunctionInfo]
+) -> dict[str, list[str]]:
+    target_keys = {function_key(function) for function in report_functions}
+    called_by: dict[str, list[str]] = {function.name: [] for function in report_functions}
+    by_name = functions_by_name(all_functions)
+    for caller in all_functions:
+        for target in resolve_call_targets(caller, by_name):
+            if function_key(target) in target_keys:
+                append_unique(called_by.setdefault(target.name, []), caller.name)
+    return called_by
+
+
+def reachable_from_contracted(functions: list[FunctionInfo]) -> set[tuple[Path, int, str]]:
+    by_name = functions_by_name(functions)
+    reachable: set[tuple[Path, int, str]] = set()
+    worklist = [function for function in functions if function.has_contract]
+    while worklist:
+        current = worklist.pop()
+        for target in resolve_call_targets(current, by_name):
+            key = function_key(target)
+            if key not in reachable:
+                reachable.add(key)
+                worklist.append(target)
     return reachable
 
 
 def analyze_file(path: Path, include_main: bool) -> FileReport:
     text = path.read_text(encoding="utf-8")
     functions = discover_functions(path, text)
-    called_by: dict[str, list[str]] = {function.name: [] for function in functions}
-    for function in functions:
-        for called in function.calls:
-            called_by.setdefault(called, []).append(function.name)
+    called_by = called_by_for(functions, functions)
 
     missing_contracts = [
         function
@@ -309,7 +350,7 @@ def analyze_file(path: Path, include_main: bool) -> FileReport:
     missing_helper_contracts = [
         function
         for function in missing_contracts
-        if function.name in reachable and (include_main or function.name != "main")
+        if function_key(function) in reachable and (include_main or function.name != "main")
     ]
 
     return FileReport(
@@ -348,14 +389,10 @@ def analyze_files(paths: list[Path], include_main: bool) -> list[FileReport]:
     for path, functions in functions_by_path.items():
         populate_calls(functions, texts[path], known_functions)
 
-    called_by: dict[str, list[str]] = {function.name: [] for function in all_functions}
-    for function in all_functions:
-        for called in function.calls:
-            called_by.setdefault(called, []).append(function.name)
-
     reachable = reachable_from_contracted(all_functions)
     reports: list[FileReport] = []
     for path, functions in functions_by_path.items():
+        called_by = called_by_for(functions, all_functions)
         missing_contracts = [
             function
             for function in functions
@@ -364,7 +401,7 @@ def analyze_files(paths: list[Path], include_main: bool) -> list[FileReport]:
         missing_helper_contracts = [
             function
             for function in missing_contracts
-            if function.name in reachable and (include_main or function.name != "main")
+            if function_key(function) in reachable and (include_main or function.name != "main")
         ]
         reports.append(
             FileReport(

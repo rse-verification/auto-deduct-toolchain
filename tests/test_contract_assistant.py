@@ -92,6 +92,47 @@ int main(void) {
         ]
         self.assertEqual(missing_helpers, ["helper"])
 
+    def test_duplicate_helper_names_do_not_mark_unrelated_file_reachable(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / "a.c").write_text(
+                """static void helper(int *p) {
+  *p = *p + 1;
+}
+
+/*@
+  ensures \\result >= 0;
+*/
+int main(void) {
+  int x = 0;
+  helper(&x);
+  return x;
+}
+""",
+                encoding="utf-8",
+            )
+            (root / "b.c").write_text(
+                """static void helper(int *p) {
+  *p = *p + 2;
+}
+""",
+                encoding="utf-8",
+            )
+
+            result = self.run_assistant("--json", str(root))
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        reports = {
+            Path(report["file"]).name: report for report in json.loads(result.stdout)
+        }
+        self.assertEqual(
+            [helper["name"] for helper in reports["a.c"]["missing_helper_contracts"]],
+            ["helper"],
+        )
+        self.assertEqual(reports["a.c"]["called_by"]["helper"], ["main"])
+        self.assertEqual(reports["b.c"]["missing_helper_contracts"], [])
+        self.assertEqual(reports["b.c"]["called_by"]["helper"], [])
+
     def test_directory_fixture_reports_domain_named_missing_helper_contract(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
