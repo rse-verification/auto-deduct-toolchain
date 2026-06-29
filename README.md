@@ -202,6 +202,22 @@ The GUI also has `Run Eva` and `Run WP` buttons. These run Frama-C on the
 selected `.c` files and show the command output. Header files must be available
 through the mounted project path or through include paths passed to Frama-C.
 
+The GUI can optionally call the OpenAI API to draft ACSL contracts for missing
+helper functions. The API key is read only from the environment and is not
+stored in the repository. One safe way to provide it before starting the GUI is:
+
+```shell
+read -rsp "OpenAI API key: " OPENAI_API_KEY
+export OPENAI_API_KEY
+export OPENAI_MODEL=gpt-4.1
+```
+
+Then start the GUI with the launcher as usual. Use `Generate Contract Draft` to
+ask the model for candidate contracts. The draft is shown as editable JSON; use
+`Run WP with Draft` to approve it for a verification attempt. Draft contracts
+are inserted only into a temporary copy of the mounted project, so the original
+source files are not modified.
+
 If a project needs preprocessor flags, add them in the `Extra Frama-C options`
 field. For example, if a header expects GCC macros and project-local includes:
 

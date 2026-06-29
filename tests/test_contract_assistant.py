@@ -209,8 +209,63 @@ int main(void) {
         gui = load_script("autodeduct_contract_assistant_gui_html", GUI)
 
         self.assertIn("Browse Docker Path", gui.HTML_PAGE)
+        self.assertIn("Generate Contract Draft", gui.HTML_PAGE)
+        self.assertIn("Run WP with Draft", gui.HTML_PAGE)
         self.assertIn('value="/project"', gui.HTML_PAGE)
         self.assertNotIn('type="file"', gui.HTML_PAGE)
+
+    def test_openai_payload_requests_structured_contract_suggestions(self):
+        gui = load_script("autodeduct_contract_assistant_gui_openai_payload", GUI)
+
+        payload = gui.openai_response_payload("draft contracts", "gpt-test")
+
+        self.assertEqual(payload["model"], "gpt-test")
+        text_format = payload["text"]["format"]
+        self.assertEqual(text_format["type"], "json_schema")
+        self.assertEqual(text_format["name"], "acsl_contract_suggestions")
+        self.assertTrue(text_format["strict"])
+
+    def test_contract_draft_is_applied_to_temporary_copy_only(self):
+        gui = load_script("autodeduct_contract_assistant_gui_apply_draft", GUI)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir) / "original"
+            copy = Path(tmpdir) / "copy"
+            root.mkdir()
+            copy.mkdir()
+            helper = "void helper(int *p) { *p = *p + 1; }\n"
+            main_source = """int value;
+/*@
+  ensures value >= 0;
+*/
+int main(void) {
+  helper(&value);
+  return 0;
+}
+"""
+            (root / "helper.c").write_text(helper, encoding="utf-8")
+            (root / "main.c").write_text(main_source, encoding="utf-8")
+            (copy / "helper.c").write_text(helper, encoding="utf-8")
+            (copy / "main.c").write_text(main_source, encoding="utf-8")
+
+            reports = gui.ASSISTANT.analyze_files([root], False)
+            draft = {
+                "suggestions": [
+                    {
+                        "file": "helper.c",
+                        "function": "helper",
+                        "contract": "/*@\n  assigns *p;\n*/",
+                        "rationale": "The helper increments the pointed value.",
+                    }
+                ]
+            }
+
+            applied = gui.apply_contract_draft_to_copy(root, copy, reports, draft)
+
+            self.assertEqual(applied, 1)
+            self.assertEqual((root / "helper.c").read_text(encoding="utf-8"), helper)
+            self.assertTrue(
+                (copy / "helper.c").read_text(encoding="utf-8").startswith("/*@")
+            )
 
     def test_gui_frama_c_command_accepts_extra_args(self):
         gui = load_script("autodeduct_contract_assistant_gui_args", GUI)
