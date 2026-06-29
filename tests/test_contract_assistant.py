@@ -462,6 +462,44 @@ int main(void) {
                 (copy / "helper.c").read_text(encoding="utf-8").startswith("/*@")
             )
 
+    def test_contract_draft_rejects_regular_c_block_comment(self):
+        gui = load_script("autodeduct_contract_assistant_gui_bad_comment", GUI)
+
+        with self.assertRaisesRegex(ValueError, "starting with /\\*@"):
+            gui.apply_contract_draft_to_copy(
+                Path("/tmp/original"),
+                Path("/tmp/copy"),
+                [],
+                {
+                    "suggestions": [
+                        {
+                            "file": "helper.c",
+                            "function": "helper",
+                            "contract": "/**\n * assigns *p;\n */",
+                        }
+                    ]
+                },
+            )
+
+    def test_contract_draft_rejects_nested_block_comment_markers(self):
+        gui = load_script("autodeduct_contract_assistant_gui_nested_comment", GUI)
+
+        with self.assertRaisesRegex(ValueError, "nested C block-comment"):
+            gui.apply_contract_draft_to_copy(
+                Path("/tmp/original"),
+                Path("/tmp/copy"),
+                [],
+                {
+                    "suggestions": [
+                        {
+                            "file": "helper.c",
+                            "function": "helper",
+                            "contract": "/*@\n  /* bad nested comment */\n  assigns *p;\n*/",
+                        }
+                    ]
+                },
+            )
+
     def test_gui_frama_c_command_accepts_extra_args(self):
         gui = load_script("autodeduct_contract_assistant_gui_args", GUI)
 

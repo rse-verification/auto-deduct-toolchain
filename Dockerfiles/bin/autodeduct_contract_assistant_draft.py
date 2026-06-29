@@ -15,10 +15,39 @@ from autodeduct_contract_assistant_project import (
 )
 
 
-def normalize_contract(contract: str) -> str:
+def strip_markdown_code_fence(contract: str) -> str:
     stripped = contract.strip()
-    if stripped.startswith("/*@") and stripped.endswith("*/"):
+    if not stripped.startswith("```"):
+        return stripped
+
+    lines = stripped.splitlines()
+    if len(lines) >= 2 and lines[-1].strip() == "```":
+        return "\n".join(lines[1:-1]).strip()
+    return stripped
+
+
+def ensure_no_nested_block_comment(contract: str) -> None:
+    if "/*" in contract or "*/" in contract:
+        raise ValueError(
+            "Draft contract contains nested C block-comment markers. "
+            "Edit the draft so the contract is one ACSL block comment only."
+        )
+
+
+def normalize_contract(contract: str) -> str:
+    stripped = strip_markdown_code_fence(contract)
+    if stripped.startswith("/*"):
+        if not stripped.startswith("/*@"):
+            raise ValueError(
+                "Draft contract must be an ACSL block comment starting with /*@, "
+                "not a regular C comment."
+            )
+        if not stripped.endswith("*/"):
+            raise ValueError("Draft ACSL block comment is missing its closing */")
+        ensure_no_nested_block_comment(stripped[3:-2])
         return stripped + "\n"
+
+    ensure_no_nested_block_comment(stripped)
     lines = ["/*@"]
     for line in stripped.splitlines():
         lines.append("  " + line.strip())

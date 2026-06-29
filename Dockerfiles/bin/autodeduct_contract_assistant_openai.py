@@ -63,7 +63,9 @@ def llm_contract_prompt(reports: list[Any], root: Path) -> str:
     return (
         "Generate draft ACSL contracts for the missing helper functions below.\n"
         "Return JSON only. Each contract must be a complete ACSL block comment "
-        "that can be inserted immediately before the named function.\n"
+        "that starts with /*@ and ends with */ and can be inserted immediately "
+        "before the named function. Do not use /** comments, Markdown fences, "
+        "or nested /* ... */ comments inside the contract string.\n"
         "Do not modify function bodies, include directives, global variables, or "
         "files not listed here. Prefer conservative requires/assigns/ensures "
         "clauses. If a precise postcondition is not justified by the code, say so "
