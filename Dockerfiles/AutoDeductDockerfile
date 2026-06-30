@@ -106,7 +106,9 @@ RUN update-ca-certificates && \
 # Set up a new user in the container
 RUN  adduser --disabled-password --shell /usr/bin/bash --uid ${UID} --gecos "Development user" dev && \
   echo "dev:dev" | chpasswd && \
-  usermod -aG sudo dev
+  usermod -aG sudo dev && \
+  mkdir -p /home/dev/repos /home/dev/.local/bin && \
+  chown -R dev:dev /home/dev
 
 USER dev
 WORKDIR /home/dev
