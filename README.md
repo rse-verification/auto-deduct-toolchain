@@ -111,26 +111,141 @@ cd Dockerfiles
 docker build -t auto-deduct:latest -f AutoDeductDockerfile .
 ```
 
-The assistant scans C function definitions, detects ACSL contracts immediately
-above functions, and reports helper functions that are reachable from contracted
-functions but do not have contracts themselves. This is a deterministic
-pre-check; it does not prove or generate contracts.
+By default, the assistant tries to use the ISP Frama-C plugin to generate the
+missing-helper report, then falls back to its built-in source scan if Frama-C,
+ISP, or the needed preprocessor setup is not available. The built-in scan is
+also used to extract source snippets for the report and LLM prompt. This is a
+deterministic pre-check; it does not prove or generate contracts.
 When a directory is provided, the assistant builds a lightweight project-level
 call graph across the scanned files, so a contracted function in `main.c` can
 identify a missing helper contract in another `.c` file.
+
+### Contract assistant architecture
+
+The contract assistant is a thin workflow layer around Frama-C/ISP, the local
+source files, and optional LLM draft generation:
+
+```text
+Host project folder
+  |
+  | mounted by scripts/autodeduct-contract-assistant-gui-docker
+  v
+AutoDeduct Docker container (/project)
+  |
+  +-- CLI: autodeduct-contract-assistant
+  |
+  +-- GUI: autodeduct-contract-assistant-gui
+        |
+        +-- Browse mounted Docker path
+        +-- Run missing-helper analysis
+        +-- Run Eva / WP
+        +-- Generate editable LLM contract draft
+```
+
+The missing-helper analysis has two backends:
+
+```text
+C source files + headers + Frama-C options
+  |
+  v
+backend=auto
+  |
+  +-- preferred: Frama-C + ISP
+  |       |
+  |       +-- ISP writes missing-helper JSON
+  |       +-- AutoDeduct maps JSON entries back to source snippets
+  |
+  +-- fallback: built-in source scan
+          |
+          +-- Lightweight function and call graph scan
+          +-- Used when Frama-C/ISP cannot parse the project yet
+```
+
+The LLM step is optional and draft-only:
+
+```text
+Missing helper list + source snippets
+  |
+  v
+OpenAI API, if OPENAI_API_KEY is set
+  |
+  v
+Editable ACSL draft JSON in the GUI
+  |
+  v
+Temporary copy of the project, only for Run WP with Draft
+  |
+  v
+Frama-C/WP draft validation
+```
+
+The normal `Run Eva` and `Run WP` buttons run Frama-C on the mounted source
+files. The `Run WP with Draft` button is different: it inserts the edited draft
+contracts into a temporary copy and validates that copy, so the original mounted
+source files are not modified by the LLM draft flow.
+
+The backend can be selected explicitly:
+
+```shell
+autodeduct-contract-assistant --backend auto path/to/case-study
+autodeduct-contract-assistant --backend isp path/to/case-study
+autodeduct-contract-assistant --backend source path/to/case-study
+```
+
+Use `--backend isp` when you want the command to fail instead of falling back to
+the source scan. If the project needs include paths or macros before Frama-C can
+parse it, pass the same options that you would pass to Frama-C:
+
+```shell
+autodeduct-contract-assistant \
+  --frama-c-extra-args '-cpp-extra-args="-D__GNUC__=12 -Ioriginal"' \
+  path/to/case-study
+```
+
+The ISP backend requires an AutoDeduct image that contains an ISP version
+providing `-isp-missing-helper-contracts-json`.
 
 Case-study sources are intentionally kept outside this toolchain repository.
 Pass a local case-study path directly to the assistant, or mount that path into
 Docker when using the container.
 
-To run the CLI helper against files in your current directory from Docker:
+### Step-by-step Docker run
+
+Build the image:
+
+```shell
+cd /path/to/auto-deduct-toolchain/Dockerfiles
+docker build -t auto-deduct:latest -f AutoDeductDockerfile .
+```
+
+Run the CLI against a mounted project:
 
 ```shell
 docker run -it --rm \
-  -v "$PWD":/work \
-  -w /work \
-  auto-deduct \
-  /usr/bin/bash -l -c 'autodeduct-contract-assistant path/to/case-study'
+  -v "/path/to/case-study":/project \
+  -w /project \
+  auto-deduct:latest \
+  /usr/bin/bash -l -c 'autodeduct-contract-assistant --backend auto .'
+```
+
+To force the precise ISP backend and fail if Frama-C/ISP cannot run:
+
+```shell
+docker run -it --rm \
+  -v "/path/to/case-study":/project \
+  -w /project \
+  auto-deduct:latest \
+  /usr/bin/bash -l -c 'autodeduct-contract-assistant --backend isp .'
+```
+
+To use only the fallback source scanner:
+
+```shell
+docker run -it --rm \
+  -v "/path/to/case-study":/project \
+  -w /project \
+  auto-deduct:latest \
+  /usr/bin/bash -l -c 'autodeduct-contract-assistant --backend source .'
 ```
 
 For machine-readable output, use:
@@ -175,6 +290,12 @@ If you mounted a larger folder but only want to run one sub-example, use
 mounted folder, so you can click from `/project` into the exact subdirectory or
 source file you want to analyze.
 
+The GUI has a `Missing-helper backend` selector:
+
+* `Auto`: try ISP/Frama-C first and fall back to the source scan.
+* `ISP/Frama-C only`: fail if the ISP JSON report cannot be generated.
+* `Source scan only`: use the lightweight source scanner without Frama-C.
+
 If port `8765` is already busy, choose another host port:
 
 ```shell
@@ -198,8 +319,10 @@ The launcher mounts the selected local project folder as:
 ```
 
 The GUI also has `Run Eva` and `Run WP` buttons. These run Frama-C on the
-selected `.c` files and show the command output. Header files must be available
-through the mounted project path or through include paths passed to Frama-C.
+selected `.c` files and show the command output. The same `Extra Frama-C
+options` field is used by the ISP missing-helper backend, the Eva run, and the
+WP run. Header files must be available through the mounted project path or
+through include paths passed to Frama-C.
 
 The GUI can optionally call the OpenAI API to draft ACSL contracts for missing
 helper functions. The API key is read only from the environment and is not

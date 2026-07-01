@@ -133,6 +133,106 @@ int main(void) {
         self.assertEqual(reports["b.c"]["missing_helper_contracts"], [])
         self.assertEqual(reports["b.c"]["called_by"]["helper"], [])
 
+    def test_isp_report_mapping_is_authoritative_for_duplicate_names(self):
+        assistant = load_script("autodeduct_contract_assistant_backend", ASSISTANT)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / "a.c").write_text(
+                """static void helper(int *p) {
+  *p = *p + 1;
+}
+
+/*@
+  ensures \\result >= 0;
+*/
+int main(void) {
+  int x = 0;
+  helper(&x);
+  return x;
+}
+""",
+                encoding="utf-8",
+            )
+            (root / "b.c").write_text(
+                """static void helper(int *p) {
+  *p = *p + 2;
+}
+""",
+                encoding="utf-8",
+            )
+
+            reports = assistant.analyze_files([root], False, backend="source")
+            mapped = assistant.apply_isp_missing_helper_report(
+                reports,
+                {
+                    "missing_helper_contracts": [
+                        {
+                            "function": "helper",
+                            "file": "b.c",
+                            "line": 1,
+                            "called_by": [
+                                {"function": "contracted_entry", "file": "b.c", "line": 7}
+                            ],
+                        }
+                    ]
+                },
+                root,
+            )
+
+        reports_by_name = {report.path.name: report for report in mapped}
+        self.assertEqual(reports_by_name["a.c"].missing_helper_contracts, [])
+        self.assertEqual(
+            [function.name for function in reports_by_name["b.c"].missing_helper_contracts],
+            ["helper"],
+        )
+        self.assertEqual(
+            reports_by_name["b.c"].called_by["helper"], ["contracted_entry"]
+        )
+        self.assertEqual(reports_by_name["b.c"].analysis_backend, "isp-frama-c")
+
+    def test_auto_backend_falls_back_to_source_scan_when_isp_is_unavailable(self):
+        assistant = load_script("autodeduct_contract_assistant_fallback", ASSISTANT)
+        original_runner = assistant.run_isp_missing_helper_report
+
+        def failing_runner(*_args, **_kwargs):
+            raise RuntimeError("test ISP failure")
+
+        assistant.run_isp_missing_helper_report = failing_runner
+        try:
+            with tempfile.TemporaryDirectory() as tmpdir:
+                root = Path(tmpdir)
+                (root / "helper.c").write_text(
+                    "void helper(int *p) { *p = *p + 1; }\n",
+                    encoding="utf-8",
+                )
+                (root / "main.c").write_text(
+                    """int value;
+/*@
+  ensures value >= 0;
+*/
+int main(void) {
+  helper(&value);
+  return 0;
+}
+""",
+                    encoding="utf-8",
+                )
+
+                reports = assistant.analyze_files([root], False, backend="auto")
+        finally:
+            assistant.run_isp_missing_helper_report = original_runner
+
+        missing_helpers = [
+            function.name
+            for report in reports
+            for function in report.missing_helper_contracts
+        ]
+        self.assertEqual(missing_helpers, ["helper"])
+        self.assertTrue(all(report.analysis_backend == "source-scan" for report in reports))
+        self.assertTrue(
+            all("test ISP failure" in report.analysis_warning for report in reports)
+        )
+
     def test_directory_fixture_reports_domain_named_missing_helper_contract(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
@@ -253,6 +353,35 @@ int main(void) {
         self.assertEqual(missing_helpers, ["helper"])
         self.assertIn("helper.c", response["summary"])
 
+    def test_gui_analysis_accepts_backend_selection(self):
+        gui = load_script("autodeduct_contract_assistant_gui_backend", GUI)
+
+        response = gui.analyze_project(
+            [
+                {
+                    "filename": "helper.c",
+                    "code": "void helper(int *p) { *p = *p + 1; }\n",
+                },
+                {
+                    "filename": "main.c",
+                    "code": """int value;
+/*@
+  ensures value >= 0;
+*/
+int main(void) {
+  helper(&value);
+  return 0;
+}
+""",
+                },
+            ],
+            include_main=False,
+            backend="source",
+        )
+
+        self.assertEqual(response["report"][0]["analysis_backend"], "source-scan")
+        self.assertIn("Backend: source-scan.", response["pipeline"][2]["detail"])
+
     def test_gui_lists_container_project_path(self):
         gui = load_script("autodeduct_contract_assistant_gui_list_path", GUI)
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -331,6 +460,44 @@ int main(void) {
             self.assertEqual((root / "helper.c").read_text(encoding="utf-8"), helper)
             self.assertTrue(
                 (copy / "helper.c").read_text(encoding="utf-8").startswith("/*@")
+            )
+
+    def test_contract_draft_rejects_regular_c_block_comment(self):
+        gui = load_script("autodeduct_contract_assistant_gui_bad_comment", GUI)
+
+        with self.assertRaisesRegex(ValueError, "starting with /\\*@"):
+            gui.apply_contract_draft_to_copy(
+                Path("/tmp/original"),
+                Path("/tmp/copy"),
+                [],
+                {
+                    "suggestions": [
+                        {
+                            "file": "helper.c",
+                            "function": "helper",
+                            "contract": "/**\n * assigns *p;\n */",
+                        }
+                    ]
+                },
+            )
+
+    def test_contract_draft_rejects_nested_block_comment_markers(self):
+        gui = load_script("autodeduct_contract_assistant_gui_nested_comment", GUI)
+
+        with self.assertRaisesRegex(ValueError, "nested C block-comment"):
+            gui.apply_contract_draft_to_copy(
+                Path("/tmp/original"),
+                Path("/tmp/copy"),
+                [],
+                {
+                    "suggestions": [
+                        {
+                            "file": "helper.c",
+                            "function": "helper",
+                            "contract": "/*@\n  /* bad nested comment */\n  assigns *p;\n*/",
+                        }
+                    ]
+                },
             )
 
     def test_gui_frama_c_command_accepts_extra_args(self):
