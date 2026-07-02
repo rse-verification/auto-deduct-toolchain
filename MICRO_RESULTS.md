@@ -1,90 +1,56 @@
-# Initial AutoDeduct C/ACSL Support Probe Result Summary
+# AutoDeduct C/ACSL Micro-Test Results
 
-This file summarizes the first observed behavior of the public-safe synthetic support probes.
+This file summarizes saved observations for public-safe synthetic support probes.
+The probes are small C/ACSL patterns, not industrial case studies, and conclusions
+apply only to the tested patterns.
 
-The results were obtained using an AutoDeduct Docker environment with the split pipeline:
+The saved observations use the split pipeline implemented by
+`autodeduct-support/run_micro_tests.py`:
 
-    Frama-C parse
-    Saida functional inference
-    ISP auxiliary inference
-    WP verification
+1. Frama-C parse
+2. Saida functional inference
+3. ISP auxiliary inference
+4. WP verification
 
-## Supported End-To-End Probes
+## Public conclusion table
 
-    micro_int_if_helper
-      Result: supported_end_to_end
-      WP goals: 20/20
+| Feature or pattern | Current public conclusion | Evidence |
+|---|---|---|
+| Integers and if-statements | Supported in tested pattern | `micro_int_if_helper` |
+| Basic assigns and \old | Supported in tested pattern | `micro_assigns_old` |
+| Simple global array update | Supported in tested pattern | `micro_global_array_basic` |
+| Simple struct values | Supported in tested pattern | `micro_struct_basic` |
+| Floating-point arithmetic | Boundary: WP does not prove all goals | `micro_float_arithmetic` |
+| Pointer arithmetic | Boundary: Aux/ISP failure | `micro_pointer_arithmetic` |
+| Simple local static state | Unexpected pass; not enough to claim general support | `micro_local_static` |
+| Persistent local static helper state | Boundary: WP does not prove all goals | `micro_local_static_helper_persistence` |
+| Nested pointers | Boundary: WP does not prove all goals | `micro_nested_pointer` |
+| ACSL logic functions | Boundary: WP does not prove all goals | `micro_acsl_logic_function` |
+| Loop without invariant | Boundary: WP does not prove all goals | `micro_loop_without_invariant` |
 
-    micro_assigns_old
-      Result: supported_end_to_end
-      WP goals: 11/11
+## Raw observed outcomes
 
-    micro_global_array_basic
-      Result: supported_end_to_end
-      WP goals: 11/11
-
-    micro_struct_basic
-      Result: supported_end_to_end
-      WP goals: 16/16
-
-## Expected Boundary Probes
-
-    micro_float_arithmetic
-      Observed boundary: WP did not prove all goals
-      WP goals: 3/6
-
-    micro_pointer_arithmetic
-      Observed boundary: auxiliary inference stage
-
-    micro_local_static
-      Observed result: unexpected pass
-      WP goals: 10/10
-      Note: this simple test is not sufficient to claim general local-static support.
-
-    micro_local_static_helper_persistence
-      Observed boundary: WP did not prove all goals
-      WP goals: 30/35
-      Note: this stronger probe exercises persistent local static state across multiple helper calls.
-
-    micro_nested_pointer
-      Observed boundary: WP did not prove all goals
-      WP goals: 6/8
-
-    micro_acsl_logic_function
-      Observed boundary: WP did not prove all goals
-      WP goals: 6/11
-
-    micro_loop_without_invariant
-      Observed boundary: WP did not prove all goals
-      WP goals: 2/8
+| Probe | Observed outcome | WP goals | Notes |
+|---|---|---:|---|
+| `micro_int_if_helper` | `supported_end_to_end` | 20/20 | Supported in tested pattern. |
+| `micro_assigns_old` | `supported_end_to_end` | 11/11 | Supported in tested pattern. |
+| `micro_global_array_basic` | `supported_end_to_end` | 11/11 | Supported in tested pattern. |
+| `micro_struct_basic` | `supported_end_to_end` | 16/16 | Supported in tested pattern. |
+| `micro_float_arithmetic` | Boundary: WP did not prove all goals | 3/6 | Floating-point arithmetic boundary. |
+| `micro_pointer_arithmetic` | Boundary: auxiliary inference stage | - | Pointer arithmetic boundary. |
+| `micro_local_static` | Unexpected pass | 10/10 | This simple probe is not enough to claim general local-static support. |
+| `micro_local_static_helper_persistence` | Boundary: WP did not prove all goals | 30/35 | Exercises persistent local static state across multiple helper calls. |
+| `micro_nested_pointer` | Boundary: WP did not prove all goals | 6/8 | Nested-pointer boundary. |
+| `micro_acsl_logic_function` | Boundary: WP did not prove all goals | 6/11 | ACSL logic-function boundary. |
+| `micro_loop_without_invariant` | Boundary: WP did not prove all goals | 2/8 | Loop-without-invariant boundary. |
+| `micro_valid_pointer_struct` | `supported_end_to_end` | 12/12 | Additional public probe. |
+| `micro_enum_switch_basic` | `supported_end_to_end` | 17/17 | Additional public probe. |
+| `micro_behavior_basic` | `supported_end_to_end` | 12/12 | Additional public probe. |
+| `micro_array_struct_field_boundary` | `supported_end_to_end` | 14/14 | Additional public boundary-clarifying probe. |
+| `micro_array_struct_read_helper_isp_crash` | Boundary: auxiliary inference stage | - | Additional public boundary probe. |
 
 ## Interpretation
 
-These probes are small feature checks. They are not intended to prove complete support for all variants of a C or ACSL feature. They provide reproducible examples for support exploration and regression testing.
-
-## Additional Public Support Probes
-
-The following additional public-safe micro-tests were added after the initial set:
-
-    micro_valid_pointer_struct
-      Result: supported_end_to_end
-      WP goals: 12/12
-
-    micro_enum_switch_basic
-      Result: supported_end_to_end
-      WP goals: 17/17
-
-    micro_behavior_basic
-      Result: supported_end_to_end
-      WP goals: 12/12
-
-    micro_array_struct_field_boundary
-      Result: supported_end_to_end
-      WP goals: 14/14
-
-    micro_array_struct_read_helper_isp_crash
-      Observed boundary: auxiliary inference stage
-
-These results show that simple pointer-to-struct access, enum/switch control flow, simple ACSL behaviors, and simple array-of-struct field access can pass in the tested AutoDeduct pipeline.
-
-A stronger array-of-struct helper-return pattern is being kept as a support-boundary probe, because it is closer to an observed auxiliary-inference failure pattern.
+- "Supported" means the tested small pattern passes parse, Saida, ISP, and WP.
+- "Boundary" means the probe exposes a current failing phase.
+- "Unexpected pass" means the boundary is narrower than expected and needs a stronger probe.
