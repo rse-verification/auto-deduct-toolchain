@@ -1,0 +1,10 @@
+
+# Local harness experiments
+autodeduct-support/harness-stubs/
+
+# Generated AutoDeduct support results
+autodeduct-support-results/
+
+# Python bytecode
+__pycache__/
+*.py[cod]

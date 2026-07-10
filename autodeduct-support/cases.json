@@ -49,7 +49,7 @@
       "entry_point": "entry",
       "expected_support": "supported",
       "expected_reason": "",
-      "description": "Generic valid pointer-to-struct field access micro-test expected to pass end to end."
+      "description": "Generic pointer-to-struct field access micro-test with only an entry-point contract."
     },
     {
       "id": "micro_enum_switch_basic",
@@ -144,12 +144,12 @@
     {
       "id": "micro_array_struct_read_helper_isp_crash",
       "module": "micro",
-      "kind": "micro_expected_unsupported",
-      "path": "autodeduct-support/micro-tests/expected_unsupported/array_struct_read_helper_isp_crash.c",
+      "kind": "wp_control",
+      "path": "autodeduct-support/micro-tests/wp_control/array_struct_read_helper_isp_crash.c",
       "entry_point": "entry",
       "expected_support": "expected_unsupported",
       "expected_reason": "array_struct_read_helper_isp_crash",
-      "description": "Reduced boundary micro-test for enum-indexed array-of-struct helper reads that may reproduce the ISP typeOffset failure."
+      "description": "WP-control boundary reproducer for enum-indexed array-of-struct helper reads with a manually written helper contract. Do not use as evidence that AutoDeduct inferred helper contracts."
     },
     {
       "id": "micro_loop_without_invariant",

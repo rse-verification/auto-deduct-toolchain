@@ -142,3 +142,4 @@ See:
 
     autodeduct-support/README.md
     MICRO_RESULTS.md
+    autodeduct-support/PUBLIC_PROBE_DIAGNOSIS.md

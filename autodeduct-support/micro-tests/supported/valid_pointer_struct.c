@@ -12,7 +12,6 @@ struct record current;
 */
 void entry(void)
 {
-    /*@ assert \valid(&current); */
     (&current)->value = 1;
     (&current)->flag = 1;
 }

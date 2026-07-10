@@ -146,12 +146,21 @@ def extract_wp_goals(text: str) -> str:
     return f"{match.group(1)}/{match.group(2)}"
 
 
+def lib_entry_args(enabled: bool) -> list[str]:
+    return ["-lib-entry"] if enabled else []
+
+
+def lib_entry_main_args(enabled: bool) -> list[str]:
+    return ["-main", ENTRY_POINT, "-lib-entry"] if enabled else []
+
+
 def run_phase(
     phase: str,
     case: dict[str, Any],
     repo_root: Path,
     case_dir: Path,
     timeout: int,
+    lib_entry: bool,
 ) -> dict[str, Any]:
     tool = executable("frama-c")
     if tool is None:
@@ -164,7 +173,7 @@ def run_phase(
     exit_code_path = phase_dir / "exit_code.txt"
 
     if phase == "frama_parse":
-        command = [tool, "-quiet", str(source)]
+        command = [tool, "-quiet", *lib_entry_main_args(lib_entry), str(source)]
         generated: list[Path] = []
     elif phase == "func":
         command = [
@@ -172,6 +181,7 @@ def run_phase(
             "-saida",
             "-main",
             ENTRY_POINT,
+            *lib_entry_args(lib_entry),
             "-saida-out=tmp_inferred_source_merged.c",
             str(source),
         ]
@@ -183,6 +193,7 @@ def run_phase(
         command = [
             tool,
             "-isp",
+            *lib_entry_main_args(lib_entry),
             "-isp-entry-point",
             ENTRY_POINT,
             inferred.name,
@@ -194,7 +205,7 @@ def run_phase(
         annotated = case_dir / "out.c"
         if not annotated.exists():
             return unknown_phase(case_dir, phase, "missing ISP output")
-        command = [tool, "-wp", "-main", ENTRY_POINT, annotated.name]
+        command = [tool, "-wp", "-main", ENTRY_POINT, *lib_entry_args(lib_entry), annotated.name]
         generated = []
     else:
         raise ValueError(f"unknown phase {phase}")
@@ -258,6 +269,43 @@ def observed(phases: dict[str, Any]) -> str:
     return "unknown"
 
 
+def classification(phases: dict[str, Any]) -> str:
+    parse = status_cell(phases, "frama_parse")
+    func = status_cell(phases, "func")
+    aux = status_cell(phases, "aux")
+    wp = status_cell(phases, "wp")
+    complete = goals_complete(wp_goals(phases))
+
+    if parse.startswith("fail") or parse == "timeout":
+        return "parse_failed"
+    if func.startswith("fail") or func == "timeout":
+        return "func_failed"
+    if aux.startswith("fail") or aux == "timeout":
+        return "aux_failed"
+    if wp == "pass" and complete is False:
+        return "wp_ran_with_unproved_goals"
+    if wp.startswith("fail") or wp == "timeout":
+        return "wp_failed"
+    if parse == "pass" and func == "pass" and aux == "pass" and wp == "pass" and complete is not False:
+        return "supported_end_to_end"
+    if parse == "pass" and func == "unknown" and aux == "unknown" and wp == "unknown":
+        return "parse_only"
+    return "unknown"
+
+
+def failure_attribution(phases: dict[str, Any]) -> str:
+    cls = classification(phases)
+    if cls == "parse_failed":
+        return "Frama-C frontend / preprocessing / ACSL syntax"
+    if cls == "func_failed":
+        return "Saida / functional inference / TriCera"
+    if cls == "aux_failed":
+        return "ISP / auxiliary inference / Eva"
+    if cls in {"wp_ran_with_unproved_goals", "wp_failed"}:
+        return "WP proof gap, weak contract, missing auxiliary facts, or solver limitation"
+    return "-"
+
+
 def expected(case: dict[str, Any]) -> str:
     value = case.get("expected_support", "-")
     return value if isinstance(value, str) else "-"
@@ -297,14 +345,17 @@ def conclusion(case: dict[str, Any], phases: dict[str, Any]) -> str:
     return obs
 
 
-def result_item(case: dict[str, Any], phases: dict[str, Any]) -> dict[str, Any]:
+def result_item(case: dict[str, Any], phases: dict[str, Any], lib_entry: bool) -> dict[str, Any]:
     item = {
         "id": case["id"],
         "module": "micro",
         "path": case["path"],
         "kind": case["kind"],
         "entry_point": ENTRY_POINT,
+        "lib_entry": lib_entry,
         "expected_support": expected(case),
+        "classification": classification(phases),
+        "failure_attribution": failure_attribution(phases),
         "observed": observed(phases),
         "match": match_cell(case, phases),
         "conclusion": conclusion(case, phases),
@@ -349,6 +400,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--run-split", action="store_true", help="Run Saida, ISP, and WP.")
     parser.add_argument("--case", dest="case_ids", action="append", help="Run one micro-test case id. May be repeated.")
     parser.add_argument("--kind", action="append", help="Run one micro-test kind. May be repeated.")
+    parser.add_argument("--lib-entry", action="store_true", help="Pass -lib-entry to Frama-C phases.")
     parser.add_argument("--timeout", type=int, default=180)
     return parser.parse_args(argv)
 
@@ -370,25 +422,25 @@ def main(argv: list[str]) -> int:
         print(f"[{case['id']}] selected", flush=True)
         if args.run_framac:
             print(f"[{case['id']}] frama-c parse", flush=True)
-            phases["frama_parse"] = run_phase("frama_parse", case, repo_root, case_dir, args.timeout)
+            phases["frama_parse"] = run_phase("frama_parse", case, repo_root, case_dir, args.timeout, args.lib_entry)
 
         if args.run_split:
             print(f"[{case['id']}] func / saida", flush=True)
-            phases["func"] = run_phase("func", case, repo_root, case_dir, args.timeout)
+            phases["func"] = run_phase("func", case, repo_root, case_dir, args.timeout, args.lib_entry)
 
             if phase_passed_with_output(phases["func"], case_dir / "tmp_inferred_source_merged.c"):
                 print(f"[{case['id']}] aux / isp", flush=True)
-                phases["aux"] = run_phase("aux", case, repo_root, case_dir, args.timeout)
+                phases["aux"] = run_phase("aux", case, repo_root, case_dir, args.timeout, args.lib_entry)
             else:
                 phases["aux"] = unknown_phase(case_dir, "aux", "Saida did not produce output")
 
             if phase_passed_with_output(phases["aux"], case_dir / "out.c"):
                 print(f"[{case['id']}] wp", flush=True)
-                phases["wp"] = run_phase("wp", case, repo_root, case_dir, args.timeout)
+                phases["wp"] = run_phase("wp", case, repo_root, case_dir, args.timeout, args.lib_entry)
             else:
                 phases["wp"] = unknown_phase(case_dir, "wp", "ISP did not produce output")
 
-        item = result_item(case, phases)
+        item = result_item(case, phases, args.lib_entry)
         write_result(case_dir / "result.json", item)
         items.append(item)
 
