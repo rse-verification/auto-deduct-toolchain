@@ -1,46 +1,46 @@
-typedef unsigned char tB;
-typedef unsigned char tU08;
+typedef unsigned char BoolValue;
+typedef unsigned char StatusValue;
 
-#define TRUE_VALUE ((tB)1)
-#define GOOD_STATUS ((tU08)10)
+#define ACTIVE_VALUE ((BoolValue)1)
+#define READY_STATUS ((StatusValue)10)
 
 typedef struct {
-    tB val_B;
-    tU08 ss_U08;
-} tBS;
+    BoolValue value;
+    StatusValue status;
+} BoolSignal;
 
 typedef enum {
-    INPUT_SIGNAL,
-    PREVIOUS_SIGNAL,
-    NUM_B_SIG_E
-} SIGNAL_B;
+    INPUT_ID,
+    PREVIOUS_ID,
+    SIGNAL_COUNT
+} SignalId;
 
-tBS signal_store[NUM_B_SIG_E];
-tBS output_signal;
+BoolSignal signals[SIGNAL_COUNT];
+BoolSignal output;
 
 /*@
-  requires 0 <= signal && signal < NUM_B_SIG_E;
+  requires 0 <= signal && signal < SIGNAL_COUNT;
   assigns \nothing;
-  ensures \valid_read(&signal_store[signal]);
-  ensures \result == signal_store[signal];
+  ensures \valid_read(&signals[signal]);
+  ensures \result == signals[signal];
 */
-tBS read_signal(SIGNAL_B signal)
+BoolSignal read_signal(SignalId signal)
 {
-    return signal_store[signal];
+    return signals[signal];
 }
 
 /*@
-  assigns output_signal.val_B;
-  ensures output_signal.val_B == \old(signal_store[INPUT_SIGNAL].val_B) ||
-          output_signal.val_B == 0;
+  assigns output.value;
+  ensures output.value == \old(signals[INPUT_ID].value) ||
+          output.value == 0;
 */
 void entry(void)
 {
-    tBS input = read_signal(INPUT_SIGNAL);
+    BoolSignal input = read_signal(INPUT_ID);
 
-    if (input.val_B == TRUE_VALUE && input.ss_U08 >= GOOD_STATUS) {
-        output_signal.val_B = input.val_B;
+    if (input.value == ACTIVE_VALUE && input.status >= READY_STATUS) {
+        output.value = input.value;
     } else {
-        output_signal.val_B = 0;
+        output.value = 0;
     }
 }

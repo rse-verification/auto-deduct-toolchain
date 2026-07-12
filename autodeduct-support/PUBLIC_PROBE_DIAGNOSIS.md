@@ -40,8 +40,42 @@ The fresh canonical audit was run inside `auto-deduct:latest` with Frama-C 31.0
 | `micro_array_struct_read_helper_isp_crash` | `wp_control/array_struct_read_helper_isp_crash.c` | `expected_unsupported` | pass | pass | fail `4` | unknown | `-` | `aux_failed` | boundary |
 | `micro_loop_without_invariant` | `expected_unsupported/loop_without_invariant.c` | `expected_unsupported` | pass | pass | pass | pass | `2/7` | `wp_ran_with_unproved_goals` | boundary |
 
-No public case currently fails at Frama-C parse. No public case currently fails
-at Saida / functional inference.
+No public case currently fails at Frama-C parse. In the saved command-returncode
+table, no case has a nonzero Saida process return code; the stricter functional
+cleanliness check below flags syntax-error text separately.
+
+## Probe roles and helper inference
+
+Pipeline success and helper-contract inference are separate conclusions.
+`supported_end_to_end` means the split pipeline reached WP and proved all goals;
+it does not by itself mean Saida inferred a helper contract.
+
+| Probe role | Meaning |
+|---|---|
+| `helper_inference` | Contains an unannotated helper and is primary evidence for Saida helper-contract inference. |
+| `entry_pipeline_control` | Has an entry contract only and mainly tests entry-contract, ISP, and WP compatibility. |
+| `mixed_inference` | Reserved for probes that mix inferred helper facts with manually supplied helper or auxiliary facts. |
+| `wp_control` | Reproducer or WP-control case; do not cite as pure inference evidence. |
+
+Current helper-inference evidence from the saved canonical run:
+
+| Case | Probe role | Inferred helper contracts | Missing inferred contracts | Interpretation |
+|---|---|---:|---:|---|
+| `micro_int_if_helper` | `helper_inference` | 1 | 0 | Saida inferred the helper contract for `nonnegative_helper`. |
+| `micro_local_static_helper_persistence` | `helper_inference` | 0 | 1 | Saida did not infer a helper contract for `next_count`; the case still reaches WP with unproved goals. |
+| `micro_array_struct_read_helper_isp_crash` | `wp_control` | 0 | 1 | The helper contract is written in the source, so this is boundary evidence, not helper-inference evidence. |
+
+All other current public probes are `entry_pipeline_control`: their successful
+pipeline result should not be described as helper-contract inference.
+
+The updated runner also records obvious TriCera syntax-error text in functional
+stderr. The saved canonical logs contain that text for these entry-only probes:
+
+| Case | Pipeline command result | Functional-inference interpretation |
+|---|---|---|
+| `micro_pointer_arithmetic` | Saida process returned `0`, later failed at Aux/ISP. | Do not treat the functional phase as clean. |
+| `micro_nested_pointer` | Saida process returned `0`, later proved WP `4/4`. | Do not cite as clean Saida evidence. |
+| `micro_acsl_logic_function` | Saida process returned `0`, later proved WP `6/6`. | Do not cite as clean Saida evidence. |
 
 ## Stale documentation findings
 
@@ -128,16 +162,16 @@ other public test currently uses `static`.
 Public support probes should prefer an entry-point ACSL contract and should let
 Saida and ISP infer helper contracts or auxiliary facts where possible.
 
-| Probe group | Finding |
-|---|---|
-| Most C tests | Entry-point contract only. |
-| `micro_int_if_helper` | Has an unannotated helper, so it is useful helper-inference evidence. |
-| `micro_local_static_helper_persistence` | Has an unannotated helper, so it is useful persistent-state helper evidence. |
-| Pointer and array tests | Some top-level `\valid`, `assigns`, or range facts are written in the entry contract; do not claim those facts were inferred. |
-| `micro_array_struct_read_helper_isp_crash` | Has a manually written helper contract and is `wp_control`, not pure inference evidence. |
+Most current probes are entry-only controls. Pointer and array tests may write
+top-level `\valid`, `assigns`, or range facts in the entry contract; those facts
+should not be described as inferred. The only current positive public helper
+inference evidence is `micro_int_if_helper`.
 
-The `wp_control` group is useful for reproducing toolchain boundaries, but it
-should not be cited as evidence that AutoDeduct inferred helper contracts.
+`micro_local_static_helper_persistence` is still useful because it contains an
+unannotated helper, but the current Saida output says no inferred contract was
+found for that helper. `micro_array_struct_read_helper_isp_crash` has a manually
+written helper contract and is `wp_control`, so it should be cited only as a
+boundary reproducer.
 
 ## Cases needing stronger probes
 

@@ -26,3 +26,8 @@ WP can run successfully as a command and still leave proof goals unproved.
 too weak to show the intended boundary. `wp_control` tests are useful boundary
 reproducers, but they are not pure AutoDeduct inference evidence when they
 contain manually written helper contracts or auxiliary facts.
+
+End-to-end WP success is not automatically Saida helper-contract inference
+success. Entry-only probes mainly test entry-contract, ISP, and WP compatibility.
+`helper_inference` probes are the primary public Saida evidence. The runner also
+records obvious TriCera syntax-error text in the functional phase.

@@ -7,6 +7,7 @@
       "kind": "micro_supported",
       "path": "autodeduct-support/micro-tests/supported/int_if_helper.c",
       "entry_point": "entry",
+      "probe_role": "helper_inference",
       "expected_support": "supported",
       "expected_reason": "",
       "description": "Generic integer branch and helper-call micro-test expected to pass end to end."
@@ -17,6 +18,7 @@
       "kind": "micro_supported",
       "path": "autodeduct-support/micro-tests/supported/assigns_old.c",
       "entry_point": "entry",
+      "probe_role": "entry_pipeline_control",
       "expected_support": "supported",
       "expected_reason": "",
       "description": "Generic global assignment micro-test using assigns and old-value reasoning."
@@ -27,6 +29,7 @@
       "kind": "micro_supported",
       "path": "autodeduct-support/micro-tests/supported/global_array_basic.c",
       "entry_point": "entry",
+      "probe_role": "entry_pipeline_control",
       "expected_support": "supported",
       "expected_reason": "",
       "description": "Generic fixed global array write micro-test expected to pass end to end."
@@ -37,6 +40,7 @@
       "kind": "micro_supported",
       "path": "autodeduct-support/micro-tests/supported/struct_basic.c",
       "entry_point": "entry",
+      "probe_role": "entry_pipeline_control",
       "expected_support": "supported",
       "expected_reason": "",
       "description": "Generic struct field assignment micro-test expected to pass end to end."
@@ -47,6 +51,7 @@
       "kind": "micro_supported",
       "path": "autodeduct-support/micro-tests/supported/valid_pointer_struct.c",
       "entry_point": "entry",
+      "probe_role": "entry_pipeline_control",
       "expected_support": "supported",
       "expected_reason": "",
       "description": "Generic pointer-to-struct field access micro-test with only an entry-point contract."
@@ -57,6 +62,7 @@
       "kind": "micro_supported",
       "path": "autodeduct-support/micro-tests/supported/enum_switch_basic.c",
       "entry_point": "entry",
+      "probe_role": "entry_pipeline_control",
       "expected_support": "supported",
       "expected_reason": "",
       "description": "Generic enum and switch control-flow micro-test expected to pass end to end."
@@ -67,6 +73,7 @@
       "kind": "micro_supported",
       "path": "autodeduct-support/micro-tests/supported/behavior_basic.c",
       "entry_point": "entry",
+      "probe_role": "entry_pipeline_control",
       "expected_support": "supported",
       "expected_reason": "",
       "description": "Generic ACSL behavior micro-test with assumes and ensures."
@@ -77,6 +84,7 @@
       "kind": "micro_expected_unsupported",
       "path": "autodeduct-support/micro-tests/expected_unsupported/float_arithmetic.c",
       "entry_point": "entry",
+      "probe_role": "entry_pipeline_control",
       "expected_support": "expected_unsupported",
       "expected_reason": "float_arithmetic",
       "description": "Boundary micro-test for floating-point arithmetic."
@@ -87,6 +95,7 @@
       "kind": "micro_expected_unsupported",
       "path": "autodeduct-support/micro-tests/expected_unsupported/pointer_arithmetic.c",
       "entry_point": "entry",
+      "probe_role": "entry_pipeline_control",
       "expected_support": "expected_unsupported",
       "expected_reason": "pointer_arithmetic",
       "description": "Boundary micro-test for pointer arithmetic."
@@ -97,6 +106,7 @@
       "kind": "micro_expected_unsupported",
       "path": "autodeduct-support/micro-tests/expected_unsupported/local_static.c",
       "entry_point": "entry",
+      "probe_role": "entry_pipeline_control",
       "expected_support": "expected_unsupported",
       "expected_reason": "local_static_variables",
       "description": "Boundary micro-test for local static storage."
@@ -107,6 +117,7 @@
       "kind": "micro_expected_unsupported",
       "path": "autodeduct-support/micro-tests/expected_unsupported/local_static_helper_persistence.c",
       "entry_point": "entry",
+      "probe_role": "helper_inference",
       "expected_support": "expected_unsupported",
       "expected_reason": "local_static_helper_persistence",
       "description": "Boundary micro-test for persistent local static state across multiple helper calls."
@@ -117,6 +128,7 @@
       "kind": "micro_expected_unsupported",
       "path": "autodeduct-support/micro-tests/expected_unsupported/nested_pointer.c",
       "entry_point": "entry",
+      "probe_role": "entry_pipeline_control",
       "expected_support": "expected_unsupported",
       "expected_reason": "nested_pointers",
       "description": "Boundary micro-test for nested pointers."
@@ -127,6 +139,7 @@
       "kind": "micro_expected_unsupported",
       "path": "autodeduct-support/micro-tests/expected_unsupported/acsl_logic_function.c",
       "entry_point": "entry",
+      "probe_role": "entry_pipeline_control",
       "expected_support": "expected_unsupported",
       "expected_reason": "acsl_logic_function",
       "description": "Boundary micro-test for ACSL logic function use."
@@ -137,6 +150,7 @@
       "kind": "micro_boundary",
       "path": "autodeduct-support/micro-tests/expected_unsupported/array_struct_field_boundary.c",
       "entry_point": "entry",
+      "probe_role": "entry_pipeline_control",
       "expected_support": "boundary",
       "expected_reason": "array_struct_field_access",
       "description": "Boundary micro-test for array-of-struct field access in ACSL assigns and ensures clauses."
@@ -147,6 +161,7 @@
       "kind": "wp_control",
       "path": "autodeduct-support/micro-tests/wp_control/array_struct_read_helper_isp_crash.c",
       "entry_point": "entry",
+      "probe_role": "wp_control",
       "expected_support": "expected_unsupported",
       "expected_reason": "array_struct_read_helper_isp_crash",
       "description": "WP-control boundary reproducer for enum-indexed array-of-struct helper reads with a manually written helper contract. Do not use as evidence that AutoDeduct inferred helper contracts."
@@ -157,6 +172,7 @@
       "kind": "micro_expected_unsupported",
       "path": "autodeduct-support/micro-tests/expected_unsupported/loop_without_invariant.c",
       "entry_point": "entry",
+      "probe_role": "entry_pipeline_control",
       "expected_support": "expected_unsupported",
       "expected_reason": "loop_without_invariant",
       "description": "Boundary micro-test for loops without explicit invariants."
