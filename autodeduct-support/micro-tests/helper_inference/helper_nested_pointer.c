@@ -1,3 +1,8 @@
+void helper_store_nested(int **target, int value)
+{
+    **target = value;
+}
+
 /*@
   requires \valid(target);
   requires \valid(*target);
@@ -6,5 +11,5 @@
 */
 void entry(int **target, int value)
 {
-    **target = value;
+    helper_store_nested(target, value);
 }

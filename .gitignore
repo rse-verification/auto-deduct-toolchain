@@ -4,6 +4,20 @@ autodeduct-support/harness-stubs/
 
 # Generated AutoDeduct support results
 autodeduct-support-results/
+!autodeduct-support-results/
+!autodeduct-support-results/academic-functional-v3.json
+!autodeduct-support-results/academic-rte-v3.json
+tmp_inferred_source_merged.c
+out.c
+stdout.txt
+stderr.txt
+exit_code.txt
+*.log
+autodeduct-support-results/**/stdout.txt
+autodeduct-support-results/**/stderr.txt
+autodeduct-support-results/**/exit_code.txt
+autodeduct-support-results/**/tmp_inferred_source_merged.c
+autodeduct-support-results/**/out.c
 
 # Python bytecode
 __pycache__/

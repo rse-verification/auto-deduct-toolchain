@@ -1,33 +1,48 @@
-# AutoDeduct C/ACSL Support Probes
+# AutoDeduct Public Micro Probes
 
-This directory contains public-safe synthetic C/ACSL probes for the AutoDeduct
-pipeline. They test small feature patterns, not industrial case studies, and
-support claims mean supported only in the tested pattern.
+This directory contains public-safe synthetic C/ACSL probes for the AutoDeduct helper-inference pipeline.
 
-## Canonical public mode
+## Paper-Model Input
 
-Run public results with `--lib-entry`:
+The strict helper-inference profile uses this shape:
+
+1. `entry` has the ACSL function contract.
+2. `entry` calls unannotated helper functions.
+3. Saida infers helper function contracts.
+4. ISP infers auxiliary annotations.
+5. WP verifies generated `out.c`.
+
+Canonical public runs use `--lib-entry`. A positive helper-inference row requires backend pass, all expected helpers inferred, zero missing helpers, generated output parse pass, ISP pass, and nonzero complete WP goals.
+
+## Files
+
+- [../MICRO_RESULTS.md](../MICRO_RESULTS.md): human-readable public result table.
+- [cases.json](cases.json): public manifest for the exported micro probes.
+- [run_support_tests.py](run_support_tests.py): backend-aware public runner.
+- [export_results_summary.py](export_results_summary.py): deterministic sanitized result exporter.
+- [../autodeduct-support-results/academic-functional-v3.json](../autodeduct-support-results/academic-functional-v3.json): functional evidence snapshot.
+- [../autodeduct-support-results/academic-rte-v3.json](../autodeduct-support-results/academic-rte-v3.json): RTE evidence snapshot.
+
+## Commands
+
+Run one probe:
 
 ```bash
-python3 autodeduct-support/run_micro_tests.py --run-framac --run-split --lib-entry --timeout 600
+python3 autodeduct-support/run_support_tests.py \
+  --run-framac \
+  --run-split \
+  --lib-entry \
+  --case helper_struct_basic \
+  --timeout 600
 ```
 
-`--lib-entry` matters because these probes use `entry` as a library-style entry
-point. Without it, WP may create main-callability obligations that are not the
-intended public support question.
+Export a sanitized snapshot:
 
-## Reading results
+```bash
+python3 autodeduct-support/export_results_summary.py \
+  --repo-root "$PWD" \
+  INPUT \
+  OUTPUT
+```
 
-- [MICRO_RESULTS.md](../MICRO_RESULTS.md) is the main public result table.
-- [PUBLIC_PROBE_DIAGNOSIS.md](PUBLIC_PROBE_DIAGNOSIS.md) explains stale-result findings, probe quality notes, static-use checks, and WP-control caveats.
-
-WP can run successfully as a command and still leave proof goals unproved.
-`unexpected_pass` means an expected-unsupported probe passed end to end and is
-too weak to show the intended boundary. `wp_control` tests are useful boundary
-reproducers, but they are not pure AutoDeduct inference evidence when they
-contain manually written helper contracts or auxiliary facts.
-
-End-to-end WP success is not automatically Saida helper-contract inference
-success. Entry-only probes mainly test entry-contract, ISP, and WP compatibility.
-`helper_inference` probes are the primary public Saida evidence. The runner also
-records obvious TriCera syntax-error text in the functional phase.
+Do not treat entry-only success or process return code zero as helper-inference support.
