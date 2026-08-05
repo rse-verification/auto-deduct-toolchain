@@ -479,8 +479,12 @@ If the GUI does not open, check that XQuartz is still running, that
 network clients are enabled in XQuartz, and that the container sees
 `DISPLAY=host.docker.internal:0`.
 
-## AutoDeduct Academic Micro Evaluation
+## AutoDeduct academic support evaluation
 
-This branch includes a public-safe synthetic micro-test evaluation for the
-AutoDeduct helper-inference pipeline. See [MICRO_RESULTS.md](MICRO_RESULTS.md)
-and [autodeduct-support/README.md](autodeduct-support/README.md).
+This branch includes a public-safe, backend-aware evaluation of AutoDeduct helper-contract inference. The final public snapshot contains 31 strict probes and reductions, with separate functional and RTE-enabled profiles.
+
+- [Result summary](MICRO_RESULTS.md)
+- [Repository guide and commands](autodeduct-support/README.md)
+- [Functional machine evidence](autodeduct-support-results/academic-functional-v3.json)
+- [RTE-enabled machine evidence](autodeduct-support-results/academic-rte-v3.json)
+
