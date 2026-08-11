@@ -1,11 +1,18 @@
-# AutoDeduct academic support evaluation
+## AutoDeduct Academic Support Evaluation
 
-This branch includes a public-safe, backend-aware evaluation of AutoDeduct helper-contract inference. The final public snapshot contains 31 strict probes and reductions, with separate functional and RTE-enabled profiles.
+This branch includes a public-safe, source-linked evaluation of the AutoDeduct helper-inference pipeline. It contains 31 exact C/ACSL probes and reductions and no industrial case-study source.
 
-- [Result summary](MICRO_RESULTS.md)
-- [Repository guide and commands](autodeduct-support/README.md)
+The frozen functional snapshot contains 12 end-to-end supported rows, 9 functional boundaries, 4 auxiliary boundaries, and 6 WP boundaries. These numbers describe the selected probe corpus; they are not a percentage of C or ACSL support.
+
+The direct/rewrite pairs keep AutoDeduct unchanged and modify the input source or specification. They show input-level workarounds and candidates for future tool automation, not completed tool improvements.
+
+Start here:
+
+- [Evaluation overview and commands](autodeduct-support/README.md)
+- [Source-linked per-probe results](MICRO_RESULTS.md)
 - [Functional machine evidence](autodeduct-support-results/academic-functional-v3.json)
 - [RTE-enabled machine evidence](autodeduct-support-results/academic-rte-v3.json)
+
 
 
 # auto-deduct-toolchain

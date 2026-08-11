@@ -1,44 +1,67 @@
 # AutoDeduct Public Support Probes
 
-This directory contains public-safe C/ACSL probes for the AutoDeduct helper-inference pipeline. It tests exact program patterns, not complete language features. It contains no industrial case-study source. Run the backend-aware Python runner inside an AutoDeduct environment, and read the results in [`MICRO_RESULTS.md`](../MICRO_RESULTS.md).
+This directory contains public-safe C/ACSL probes for the AutoDeduct helper-inference pipeline. The probes test exact program patterns under a named tool version and command profile. They do not define universal support for a complete C or ACSL feature, and they contain no industrial case-study source.
+
+Start with [`../MICRO_RESULTS.md`](../MICRO_RESULTS.md) for the source-linked result table.
 
 ## Paper-model input
 
 A strict support probe has this form:
 
-1. `entry` has the only ACSL function contract.
+1. `entry` has the only written ACSL function contract.
 2. `entry` calls one or more helpers without written function contracts.
 3. Saida and TriCera infer the helper contracts.
 4. ISP and Eva infer auxiliary annotations.
-5. WP proves the generated program.
+5. WP verifies the generated program.
 
-Canonical public runs use `--lib-entry`. A row is positive only when every evidence gate passes.
+Canonical public runs use `--lib-entry`.
+
+A positive row requires all of the following:
+
+- the functional backend is clean;
+- every expected helper contract is inferred;
+- no missing-contract marker remains;
+- generated Saida output parses;
+- ISP produces usable output;
+- WP reports a nonzero goal set and proves every goal.
+
+A process return code of zero is not sufficient evidence of support.
 
 ## Repository map
 
 | File or directory | Purpose |
 |---|---|
-| [`cases.json`](cases.json) | Public manifest, source paths, evidence roles, profiles, and rewrite links |
+| [`cases.json`](cases.json) | Manifest, source paths, profiles, expected helpers, and direct/rewrite links |
 | [`micro-tests/helper_inference/`](micro-tests/helper_inference/) | Direct strict helper-inference probes |
-| [`micro-tests/helper_inference_rewrites/`](micro-tests/helper_inference_rewrites/) | Controlled rewrites and reductions |
-| [`run_support_tests.py`](run_support_tests.py) | Runs parse, Saida, ISP, WP, and optional RTE-enabled WP |
-| [`export_results_summary.py`](export_results_summary.py) | Produces deterministic sanitized JSON |
+| [`micro-tests/helper_inference_rewrites/`](micro-tests/helper_inference_rewrites/) | Controlled input rewrites and reductions |
+| [`run_support_tests.py`](run_support_tests.py) | Backend-aware parse, Saida, ISP, WP, and optional RTE runner |
+| [`export_results_summary.py`](export_results_summary.py) | Deterministic sanitized evidence exporter |
 | [`tests/`](tests/) | Unit tests for command construction, classification, and export |
-| [`../MICRO_RESULTS.md`](../MICRO_RESULTS.md) | Concise human-readable conclusions with source links |
-| [`../autodeduct-support-results/`](../autodeduct-support-results/) | Frozen public functional and RTE evidence |
+| [`../MICRO_RESULTS.md`](../MICRO_RESULTS.md) | Human-readable conclusions with source links |
+| [`../autodeduct-support-results/`](../autodeduct-support-results/) | Frozen functional and RTE-enabled machine evidence |
 
 ## Quick result map
 
-| Tested pattern | Current conclusion | Evidence |
-|---|---|---|
-| Integer branch, simple struct, enum/switch, `assigns` + `\old` | Supported in the tested forms | [`MICRO_RESULTS.md`](../MICRO_RESULTS.md) |
-| Two helper levels and repeated helper call contexts | Supported in the tested forms | [`MICRO_RESULTS.md`](../MICRO_RESULTS.md) |
-| Local static state, float, pointer arithmetic, nested pointers | Functional-inference boundaries | [`academic-functional-v3.json`](../autodeduct-support-results/academic-functional-v3.json) |
-| Array-of-struct return/rewrite patterns | Auxiliary-inference boundary | [`MICRO_RESULTS.md`](../MICRO_RESULTS.md) |
-| Loop without invariant and several array reductions | Reach WP, but proof remains incomplete | [`MICRO_RESULTS.md`](../MICRO_RESULTS.md) |
-| Stack pointer, logic function, behavior, predicate | Direct forms fail; selected rewrites pass | [`MICRO_RESULTS.md`](../MICRO_RESULTS.md) |
+| Tested pattern family | Current conclusion |
+|---|---|
+| Integer branch, simple struct, enum/switch, selected `assigns` and `\old` | Supported in the tested forms |
+| Two helper levels, repeated helper call contexts, simple whole-struct return | Supported in the tested forms |
+| Local static state, floating point, pointer arithmetic, nested pointers | Functional-inference boundaries in the tested forms |
+| Selected array-of-struct helper patterns | Auxiliary-inference boundary |
+| Loop without an inferred invariant and selected array/global-state reductions | Reach WP, but proof remains incomplete |
+| Selected pointer and ACSL specification forms | Direct forms fail; some input-level rewrites pass |
 
-## Run one probe
+## Input-level rewrites
+
+The direct/rewrite pairs keep the AutoDeduct implementation unchanged and modify the input source or specification. They are diagnostic experiments and possible user workarounds. They are not completed improvements to AutoDeduct itself.
+
+A tool-level improvement is established only when the original direct input passes unchanged after AutoDeduct is modified and rebuilt.
+
+Some rewrites change several details at once. A passing rewrite therefore identifies a useful direction, but it does not always isolate one unique root cause or prove full semantic equivalence for every program context.
+
+## Run the evaluation
+
+Run one probe:
 
 ```bash
 python3 autodeduct-support/run_support_tests.py \
@@ -74,9 +97,9 @@ python3 autodeduct-support/run_support_tests.py \
 
 ## Interpret a result
 
-- `supported_end_to_end`: all expected helper contracts were inferred, generated files parsed, ISP passed, and WP proved a nonzero complete goal set.
-- `failed_at_func`: the first evidence boundary is Saida/TriCera or generated functional output.
-- `failed_at_aux`: helper inference succeeded, but ISP did not produce a usable result.
-- `failed_at_wp`: the pipeline reached WP, but goals remain unproved.
+- `supported_end_to_end`: all positive evidence gates pass.
+- `failed_at_func`: the first reliable boundary is Saida/TriCera or generated functional output.
+- `failed_at_aux`: functional inference is usable, but ISP does not produce a usable result.
+- `failed_at_wp`: the pipeline reaches WP, but one or more goals remain unproved.
 
 Do not generalize one probe to every program that uses the same C or ACSL feature.
