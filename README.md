@@ -1,131 +1,194 @@
-# auto-deduct-toolchain
+# AutoDeduct
 
-This is a project for composing a formal verification toolchain using
-TriCera, Frama-C and custom Frama-C plug-ins.
+AutoDeduct V1 packages a command-line formal-verification pipeline for C
+programs. The pipeline combines Frama-C with Saida, TriCera, ISP/Eva, and WP.
 
-The development environment and toolchain are provided as a Dockerfile
-under the GNU GPLv2 license. For full license conditions, please see
-the [LICENSE](LICENSE) file
+The V1 release intentionally has no GUI and no LLM contract-generation
+assistant. The original C files are never edited by the command. Generated
+contracts, auxiliary annotations, logs, and the final JSON report are written
+to a separate output directory.
 
-## Designed with VSCode in mind
+## Pipeline
 
-While not at all necessary for using the image, it is designed with
-Visual Studio Code in mind, and more specifically, using it as a container
-for [remote development](https://code.visualstudio.com/docs/remote/remote-overview)
-in VSCode. An example/template of a
-[devcontainer configuration](https://code.visualstudio.com/docs/devcontainers/containers)
-can be found in this repository, in `.devcontainer/devcontainer.json`.
-
-Please note that the devcontainer will also mount a docker volume under
-`/home/dev/persistent/repos/`. This is intended for persistent storage
-between rebuilds of the devcontainer. You can of course use the ordinary
-workspace folder provided by the devcontainer, but if you are on Windows
-that folder typically resides on a Windows file system drive which will
-make file access very slow inside the Linux container. This is very
-noticable when compiling e.g. Scala applications.
-
-## Building the docker image
-
-In the examples we are using bash, but the syntax should be similar
-in your command line shell of choice.
-
-The dockerfile will download things using a Java runtime environment
-(JRE). JRE needs to know about proxies, so if you are building the
-container while behind a proxy please provide the appropriate values
-according to the example below. (Also remember that you might have to
-set your `HTTP_PROXY` and `HTTPS_PROXY` environment variables.)
-
-Of course you are free to choose any tag you like for your image.
-
-```shell
-git clone https://github.com/rse-verification/toolchain.git
-cd toolchain/Dockerfiles
-
-# Use the following for normal builds
-docker build -t auto-deduct:0.1.0 -t auto-deduct:latest -f AutoDeductDockerfile .
-
-# Use the follwing behind a proxy
-docker build --build-arg PROXY_HOST=<your.proxy.name> --build-arg PROXY_PORT=<port> -t auto-deduct:0.1.0 -t auto-deduct:latest -f AutoDeductDockerfile .
+```text
+C source files
+      |
+      v
+Frama-C parse
+      |
+      v
+Saida -> TriCera functional-contract inference
+      |
+      v
+reachable-contract check
+      |
+      v
+ISP + Eva auxiliary-annotation inference
+      |
+      v
+Frama-C WP verification
+      |
+      v
+text summary + report.json
 ```
 
-Please note that building the container can take quite a while since
-a lot of OCAML modules for Frama-C are built from source during
-the container build.
+Saida is the Frama-C plugin that invokes TriCera to infer functional
+contracts for helper functions below a contracted entry point. ISP consumes
+that annotated C source and uses Eva-derived states to infer auxiliary ACSL
+clauses for WP. AutoDeduct checks the generated source and records missing
+contracts before WP is run; a missing reachable contract makes the final
+pipeline status `failed` even when a later command happens to exit zero.
 
-## Container contents
+## Build the Docker image
 
-All tools and source code are installed in the container to be used by
-the user `dev`. Password setup for this user is also `dev`.
-
-Apart from Scala (used by TriCera) and Frama-C things installed under
-`/home/dev/.local/...` there is also
-
-* `/home/dev/repos/tricera` - Source code for
-  [TriCera](https://github.com/uuverifiers/tricera) model checker.
-  The binaries are built as part of the container build, and symbolic
-  links are created in `/home/dev/.local/bin`
-
-* `/home/dev/repos/saida` - Source code for the
-  [Saida](https://github.com/rse-verification/saida) Frama-C plugin.
-  The plugin is built and installed as an OCAML package as part of
-  the container build.
-
-* `/home/dev/repos/interface-specification-propagator` - Source code
-  for the the [ISP (Interface Specification Propagator)](https://github.com/rse-verification/interface-specification-propagator) Frama-C plugin.
-  The plugin is built and installed as an OCAML package as part of
-  the container build.
-
-* `/home/dev/repos/auto-deduct-examples` - Some helper scripts, and
-  [a set of examples](https://github.com/rse-verification/auto-deduct-examples)
-  on which the toolchain has been tested in practice.
-
-## Starting the container
-
-Once you have built the container, you can start it
+Build from the repository root. This is important because the Dockerfile
+copies the CLI from the top-level `bin/` directory.
 
 ```shell
-docker run -it auto-deduct
+git clone https://github.com/rse-verification/auto-deduct-toolchain.git
+cd auto-deduct-toolchain
+docker build \
+  -t auto-deduct:1.0.0 \
+  -t auto-deduct:latest \
+  -f Dockerfiles/AutoDeductDockerfile .
 ```
 
-## Running the Frama-C GUI
-
-If you want to use the Frama-C GUI, you will need an
-[X-window server](https://en.wikipedia.org/wiki/X_Window_System)
-running.
-
-### On Windows
-
-For Windows there are at least two X-servers
-
-* [mobaXterm](https://mobaxterm.mobatek.net/)
-* [VcXsrv](https://sourceforge.net/projects/vcxsrv/)
-
-Make sure your server is started, then in your auto-deduct container
-start the Frama-C GUI from the command line.
+On Apple Silicon, build and run the image as `linux/amd64` so the TriCera
+preprocessing helper runs with its supported architecture:
 
 ```shell
-frama-c-gui
+docker build --platform linux/amd64 \
+  -t auto-deduct:latest \
+  -f Dockerfiles/AutoDeductDockerfile .
 ```
 
-However, if you use the image as a devcontainer for Visual Studio
-Code (VSCode), and run the GUI from a terminal inside VSCode,
-VSCode integrates with WSL. WSL already has support for Wayland
-and therefore there is no need for an extra X-server.
-
-### On Linux
-
-As long as you are running a GUI in your GNU/Linux distribution
-chances are very high that you already have a server installed.
-(There are two systems for GUIs on GNU/Linux, the X Window System
-provided by X.Org Server, and Wayland. If you are running Wayland
-chances are pretty high that you have some compatibility solution
-installed.) However, in order use your host's X server, you
-need start your container with additional arguments
+Behind a proxy, add the build arguments used by the image:
 
 ```shell
-docker run -it --env DISPLAY=$DISPLAY --volume /tmp/.X11-unix:/tmp/.X11-unix
+docker build \
+  --build-arg PROXY_HOST=<proxy-host> \
+  --build-arg PROXY_PORT=<proxy-port> \
+  -t auto-deduct:latest \
+  -f Dockerfiles/AutoDeductDockerfile .
 ```
 
-### On Mac
+The image contains configured versions of Frama-C, Saida, ISP, and TriCera.
+The development branch currently uses ISP `master` because the older
+`v0.3.1` tag predates the machine-readable missing-helper report used by this
+CLI. Before publishing a V1 image, replace it with a released ISP tag or
+commit and update the compatibility tests. The image also contains the SMT
+solvers used by WP. The image is optional: the same
+`bin/autodeduct` command can run on a host where the matching tools and their
+dependencies are already installed.
 
-To be done.
+## Run the CLI in Docker
+
+Mount the directory containing the C project as `/work`. The output directory
+is created in that mounted directory, while the input files remain unchanged.
+
+```shell
+docker run --rm \
+  -v "$PWD":/work \
+  -w /work \
+  auto-deduct:latest \
+  autodeduct path/to/main.c
+```
+
+For an Apple Silicon image built with the command above, add
+`--platform linux/amd64` to `docker run` as well.
+
+For a project with headers or several translation units:
+
+```shell
+docker run --rm \
+  -v "$PWD":/work \
+  -w /work \
+  auto-deduct:latest \
+  autodeduct \
+  --include /work/include \
+  --entry-point main \
+  --output-dir /work/autodeduct-output \
+  path/to/main.c path/to/helper.c
+```
+
+The command accepts C source files, not a directory. Pass every translation
+unit required by the project and use `--include` for header directories.
+Preprocessor/compiler flags can be passed with repeated
+`--frama-c-option`, for example:
+
+```shell
+autodeduct \
+  --frama-c-option=-cpp-extra-args=-DPLATFORM_TEST \
+  --include include \
+  src/main.c src/account.c
+```
+
+## CLI options
+
+```text
+autodeduct --help
+autodeduct --version
+autodeduct [options] SOURCE.c [SOURCE.c ...]
+```
+
+Useful options are:
+
+* `--entry-point NAME` selects the contracted entry function; default is
+  `main`.
+* `--output-dir DIRECTORY` stores generated files and logs; default is
+  `autodeduct-output`.
+* `--include DIRECTORY` adds a C include directory and can be repeated.
+* `--frama-c-option OPTION` forwards an option to the Frama-C stages and can
+  be repeated.
+* `--wp-option OPTION` forwards an option only to WP and can be repeated.
+* `--wp-rte` adds WP runtime-error goals.
+* `--timeout SECONDS` limits each external analysis stage; default is 300.
+* `--json` prints the final machine-readable report to standard output.
+
+The output directory contains `inferred.c` from Saida, `out.c` from ISP,
+`contracts.json`, `missing-helper-contracts.json` from ISP when available,
+one stdout and stderr log per stage, and `report.json`.
+
+## Result and failure handling
+
+The CLI returns exit code `0` only when parsing, Saida/TriCera, ISP/Eva, WP,
+and the reachable-contract check all pass. It returns exit code `1` for
+input, environment, timeout, parsing, inference, annotation, contract, or WP
+failures.
+
+The human report names the failing stage. `--json` is intended for CI and
+skill integrations; it contains the same stage status, command, return code,
+log paths, artifacts, contract reachability, and error information.
+
+The command does not treat a process exit code as proof that the complete
+contract was verified. It also checks that Saida and ISP produced their
+expected generated files and that all functions reachable from the entry
+point have contracts.
+
+## V1 scope and limitations
+
+V1 is a deterministic CLI pipeline. It does not include the former GUI or
+LLM assistant, and it does not modify source files or automatically accept
+generated contracts into the original project.
+
+The underlying Saida and ISP plugins are experimental and retain their own
+limitations. In particular, the current toolchain should not be treated as a
+general solution for floating-point programs, unsupported pointer/array
+patterns, local static state, or loops without suitable invariants. A
+successful command is evidence for the selected input and tool versions, not
+a universal proof that every possible execution is safe.
+
+## Repository layout
+
+* `bin/autodeduct` is the small executable entry point.
+* `bin/autodeduct_pipeline.py` contains argument parsing, stage execution,
+  contract reachability checking, and report generation.
+* `Dockerfiles/AutoDeductDockerfile` builds the Frama-C/Saida/TriCera/ISP
+  environment and installs the CLI as `autodeduct`.
+* `tests/test_autodeduct.py` tests contract reachability and the orchestration
+  behavior without requiring Docker or the analysis tools.
+
+## License
+
+The toolchain and command-line additions are provided under the GNU GPLv2.
+See [LICENSE](LICENSE) for the full license text.
