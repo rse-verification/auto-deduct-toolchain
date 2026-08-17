@@ -42,6 +42,21 @@ the C parser or call graph, so function reachability and missing-contract
 semantics stay aligned with ISP. A missing reachable contract makes the final
 pipeline status `failed` even when a later command happens to exit zero.
 
+## Public paper example
+
+The repository includes one public teaching example under
+`examples/paper-1046/`. It is based on the CruiseControl code published with
+Liu et al., *An Empirical Study of the Code Generation of Safety-Critical
+Software Using LLMs*, *Applied Sciences* 14(3), 1046 (2024):
+<https://doi.org/10.3390/app14031046>.
+
+The public source is kept unchanged and is accompanied by its original
+license notice. The separate `harness.c` file adds an ACSL entry contract for
+AutoDeduct; it does not modify the paper source. This example uses only the
+standard `<stdio.h>` header and contains no Scania or private case-study
+files. See `examples/paper-1046/README.md` for provenance and the Docker
+command.
+
 ## Build the Docker image
 
 Build from the repository root. This is important because the Dockerfile
@@ -192,6 +207,8 @@ a universal proof that every possible execution is safe.
   maintain a second C parser or call graph.
 * `Dockerfiles/AutoDeductDockerfile` builds the Frama-C/Saida/TriCera/ISP
   environment and installs the CLI as `autodeduct`.
+* `examples/paper-1046/` contains the attributed public paper example and its
+  separate AutoDeduct harness.
 * `tests/test_autodeduct.py` tests ISP report parsing and orchestration behavior
   without requiring Docker or the analysis tools.
 
