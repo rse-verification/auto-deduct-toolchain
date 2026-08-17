@@ -20,10 +20,10 @@ Frama-C parse
 Saida -> TriCera functional-contract inference
       |
       v
-reachable-contract check
+ISP + Eva auxiliary-annotation inference
       |
       v
-ISP + Eva auxiliary-annotation inference
+ISP reachable-contract report
       |
       v
 Frama-C WP verification
@@ -35,8 +35,11 @@ text summary + report.json
 Saida is the Frama-C plugin that invokes TriCera to infer functional
 contracts for helper functions below a contracted entry point. ISP consumes
 that annotated C source and uses Eva-derived states to infer auxiliary ACSL
-clauses for WP. AutoDeduct checks the generated source and records missing
-contracts before WP is run; a missing reachable contract makes the final
+clauses for WP. ISP also owns the reachable-function analysis: AutoDeduct
+passes ISP's `-isp-missing-helper-contracts` options through Frama-C and reads
+the resulting `missing-helper-contracts.json`. AutoDeduct does not reimplement
+the C parser or call graph, so function reachability and missing-contract
+semantics stay aligned with ISP. A missing reachable contract makes the final
 pipeline status `failed` even when a later command happens to exit zero.
 
 ## Build the Docker image
@@ -146,8 +149,11 @@ Useful options are:
 * `--json` prints the final machine-readable report to standard output.
 
 The output directory contains `inferred.c` from Saida, `out.c` from ISP,
-`contracts.json`, `missing-helper-contracts.json` from ISP when available,
-one stdout and stderr log per stage, and `report.json`.
+`contracts.json` (AutoDeduct's normalized summary),
+`missing-helper-contracts.json` from ISP, one stdout and stderr log per stage,
+and `report.json`. The ISP missing-helper report is required; if ISP does not
+write valid JSON with a supported missing-contract field, the pipeline fails
+at `contract-check` with an actionable error.
 
 ## Result and failure handling
 
@@ -162,8 +168,8 @@ log paths, artifacts, contract reachability, and error information.
 
 The command does not treat a process exit code as proof that the complete
 contract was verified. It also checks that Saida and ISP produced their
-expected generated files and that all functions reachable from the entry
-point have contracts.
+expected generated files and that ISP reports contracts for all functions it
+considers reachable from the entry point.
 
 ## V1 scope and limitations
 
@@ -182,11 +188,12 @@ a universal proof that every possible execution is safe.
 
 * `bin/autodeduct` is the small executable entry point.
 * `bin/autodeduct_pipeline.py` contains argument parsing, stage execution,
-  contract reachability checking, and report generation.
+  ISP report handling, and report generation. It deliberately does not
+  maintain a second C parser or call graph.
 * `Dockerfiles/AutoDeductDockerfile` builds the Frama-C/Saida/TriCera/ISP
   environment and installs the CLI as `autodeduct`.
-* `tests/test_autodeduct.py` tests contract reachability and the orchestration
-  behavior without requiring Docker or the analysis tools.
+* `tests/test_autodeduct.py` tests ISP report parsing and orchestration behavior
+  without requiring Docker or the analysis tools.
 
 ## License
 
