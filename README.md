@@ -42,20 +42,23 @@ the C parser or call graph, so function reachability and missing-contract
 semantics stay aligned with ISP. A missing reachable contract makes the final
 pipeline status `failed` even when a later command happens to exit zero.
 
-## Public paper example
+## Public ASE 2024 example
 
-The repository includes one public teaching example under
-`examples/paper-1046/`. It is based on the CruiseControl code published with
-Liu et al., *An Empirical Study of the Code Generation of Safety-Critical
-Software Using LLMs*, *Applied Sciences* 14(3), 1046 (2024):
-<https://doi.org/10.3390/app14031046>.
+The repository includes the public steering-system example under
+`examples/ase-2024/`. The source is copied from the
+[rse-verification/auto-deduct-examples](https://github.com/rse-verification/auto-deduct-examples/tree/main/ase-2024)
+repository and retained with its attribution.
 
-The public source is kept unchanged and is accompanied by its original
-license notice. The separate `harness.c` file adds an ACSL entry contract for
-AutoDeduct; it does not modify the paper source. This example uses only the
-standard `<stdio.h>` header and contains no Scania or private case-study
-files. See `examples/paper-1046/README.md` for provenance and the Docker
-command.
+The example is associated with the ASE 2024 paper *An Exercise in Mind
+Reading: Automatic Contract Inference for Frama-C*:
+<https://doi.org/10.1007/978-3-031-55608-1_13>.
+
+`stee.c` models a vehicle steering system. Its ACSL contract is attached to
+the entry point `main` and expresses five requirements about primary steering
+failure, vehicle movement, secondary steering, and electric-motor activation.
+The helper functions are intentionally left without complete contracts so the
+toolchain can infer them. See `examples/ase-2024/README.md` for provenance and
+the Docker command. No Scania or private case-study files are included.
 
 ## Build the Docker image
 
@@ -115,7 +118,23 @@ docker run --rm \
 For an Apple Silicon image built with the command above, add
 `--platform linux/amd64` to `docker run` as well.
 
-For a project with headers or several translation units:
+For a project directory, AutoDeduct recursively discovers `.c` translation
+units. Header files are not passed as source inputs; provide additional header
+directories with `--include`:
+
+```shell
+docker run --rm \
+  -v "$PWD":/work \
+  -w /work \
+  auto-deduct:latest \
+  autodeduct \
+  --include /work/my-project/include \
+  --entry-point main \
+  --output-dir /work/my-project/autodeduct-output \
+  /work/my-project
+```
+
+For explicit source files or several translation units:
 
 ```shell
 docker run --rm \
@@ -129,8 +148,10 @@ docker run --rm \
   path/to/main.c path/to/helper.c
 ```
 
-The command accepts C source files, not a directory. Pass every translation
-unit required by the project and use `--include` for header directories.
+The command accepts C source files and project directories. Directory inputs
+are searched recursively for `.c` files; common build, VCS, dependency, and
+generated-output directories are skipped. Pass `--include` for header
+directories that are not next to the source files.
 Preprocessor/compiler flags can be passed with repeated
 `--frama-c-option`, for example:
 
@@ -146,7 +167,7 @@ autodeduct \
 ```text
 autodeduct --help
 autodeduct --version
-autodeduct [options] SOURCE.c [SOURCE.c ...]
+autodeduct [options] SOURCE_OR_DIRECTORY [SOURCE_OR_DIRECTORY ...]
 ```
 
 Useful options are:
@@ -207,8 +228,8 @@ a universal proof that every possible execution is safe.
   maintain a second C parser or call graph.
 * `Dockerfiles/AutoDeductDockerfile` builds the Frama-C/Saida/TriCera/ISP
   environment and installs the CLI as `autodeduct`.
-* `examples/paper-1046/` contains the attributed public paper example and its
-  separate AutoDeduct harness.
+* `examples/ase-2024/` contains the attributed public steering-system example
+  and its entry-point contract.
 * `tests/test_autodeduct.py` tests ISP report parsing and orchestration behavior
   without requiring Docker or the analysis tools.
 
