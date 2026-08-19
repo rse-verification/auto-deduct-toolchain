@@ -256,8 +256,7 @@ considers reachable from the entry point.
 
 ## V1 scope and limitations
 
-V1 is a deterministic CLI pipeline. It does not include the former GUI or
-LLM assistant, and it does not modify source files or automatically accept
+V1 is a deterministic CLI pipeline. It does not modify source files or automatically accept
 generated contracts into the original project.
 
 The underlying Saida and ISP plugins are experimental and retain their own
