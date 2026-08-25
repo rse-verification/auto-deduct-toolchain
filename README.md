@@ -244,7 +244,7 @@ docker run --rm \
   autodeduct \
   --include /work/my-project/include \
   --entry-point main \
-  --output-dir /work/my-project/autodeduct-output \
+  --output-dir /work/autodeduct-output \
   /work/my-project
 ```
 
@@ -263,9 +263,11 @@ docker run --rm \
 ```
 
 The command accepts C source files and project directories. Directory inputs
-are searched recursively for `.c` files; common build, VCS, dependency, and
-generated-output directories are skipped. Pass `--include` for header
-directories that are not next to the source files.
+are searched recursively for `.c` and `.C` files; common build, VCS,
+dependency, and generated-output directories are skipped. Pass `--include` for
+header directories that are not next to the source files. The output directory
+must be outside the input source tree, so generated artifacts cannot overwrite
+the project being analysed.
 Preprocessor/compiler flags can be passed with repeated
 `--frama-c-option`, for example:
 
@@ -320,6 +322,19 @@ The command does not treat a process exit code as proof that the complete
 contract was verified. It also checks that Saida and ISP produced their
 expected generated files and that ISP reports contracts for all functions it
 considers reachable from the entry point.
+
+Input diagnostics are reported before analysis when a source path does not
+exist, is not a regular file or directory, or is an explicit source file with
+an unsupported suffix. Directory inputs must contain at least one discoverable
+`.c` or `.C` translation unit; header files should be supplied through
+`--include` rather than as source inputs. If Frama-C reports that the selected
+entry point is not defined,
+AutoDeduct identifies the missing function and suggests checking
+`--entry-point`. If a source calls a function without a visible forward
+declaration, the parse error explains that a prototype must be added in the
+source or an included header. AutoDeduct removes only its known generated files
+and stage logs at the start of a run, preventing artifacts from an earlier run
+from being mistaken for current output while preserving unrelated files.
 
 ## V1 scope and limitations
 
