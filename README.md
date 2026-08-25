@@ -307,9 +307,21 @@ generated contracts into the original project.
 The underlying Saida and ISP plugins are experimental and retain their own
 limitations. In particular, the current toolchain should not be treated as a
 general solution for floating-point programs, unsupported pointer/array
-patterns, local static state, or loops without suitable invariants. A
-successful command is evidence for the selected input and tool versions, not
-a universal proof that every possible execution is safe.
+patterns, local static state, or loops without suitable invariants. ISP also
+does not currently support recursive auxiliary annotation generation for
+arrays contained in struct fields, such as repeated paths of the form
+`records[slot].f1[i].f2[j]`. The merged enum-indexed struct support covers
+flat struct fields after an enum-indexed array access, not arbitrary nested
+`Field -> Index` paths.
+
+For this unsupported nested-aggregate pattern, ISP reports diagnostic
+`ISP-E010` and the AutoDeduct `isp_eva` stage fails clearly. This means the
+pipeline result is not complete or valid for WP; review the input and
+contract manually rather than treating generated output as a proof. AutoDeduct
+does not modify the original source files.
+
+A successful command is evidence for the selected input and tool versions,
+not a universal proof that every possible execution is safe.
 
 ## Repository layout
 
