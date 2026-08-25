@@ -16,7 +16,6 @@
     "functional_backend_error_kind": null,
     "functional_backend_error_text": null,
     "functional_backend_status": "pass",
-    "functional_observed": "supported_end_to_end",
     "functional_wp_goals": "20/20",
     "helper_inference_claim": "positive",
     "id": "micro_int_if_helper",
@@ -41,7 +40,7 @@
     },
     "probe_role": "positive_helper_inference_probe",
     "process_first_failed_stage": "-",
-    "public_export": null,
+    "public_export": true,
     "rewrite_of": null,
     "rte_goal_breakdown": {
       "array_bounds": {
@@ -70,18 +69,15 @@
         "unproved": 0
       }
     },
-    "rte_goal_count_kind": "wp_with_rte_goals",
-    "rte_reached": true,
     "rte_result": "rte_goals_proved",
     "rte_wp_goals": "20/20",
     "saida_output_parse_status": "pass",
     "saida_tricera_opts": null,
     "source_sha256": "7671298d72e5215a506b596408b29d4245ad07ec463472d16fd34e15597e4a4e",
-    "source_visibility": null,
+    "source_visibility": "public",
     "suspicious_contract_markers": [],
     "tricera_result_present": true,
-    "wp_goals": "20/20",
-    "wp_with_rte_goals": "20/20"
+    "wp_goals": "20/20"
   },
   {
     "baseline_group": "academic_functional_v1",
@@ -100,7 +96,6 @@
     "functional_backend_error_kind": "horn_translation_error",
     "functional_backend_error_text": "Horn Translation Error: Static variables with contracts are not supported yet.",
     "functional_backend_status": "translation_error",
-    "functional_observed": "failed_at_func",
     "functional_wp_goals": "26/31",
     "helper_inference_claim": "negative",
     "id": "micro_local_static_helper_persistence",
@@ -125,7 +120,7 @@
     },
     "probe_role": "negative_helper_inference_probe",
     "process_first_failed_stage": "wp",
-    "public_export": null,
+    "public_export": true,
     "rewrite_of": null,
     "rte_goal_breakdown": {
       "array_bounds": {
@@ -154,18 +149,15 @@
         "unproved": 0
       }
     },
-    "rte_goal_count_kind": "wp_with_rte_goals",
-    "rte_reached": true,
     "rte_result": "failed_at_rte_wp_goals",
     "rte_wp_goals": "29/34",
     "saida_output_parse_status": "pass",
     "saida_tricera_opts": null,
     "source_sha256": "8c95117f2e204cab69105628fda79351e24fd1c1b31ede21443e3b48af8493f0",
-    "source_visibility": null,
+    "source_visibility": "public",
     "suspicious_contract_markers": [],
     "tricera_result_present": true,
-    "wp_goals": "26/31",
-    "wp_with_rte_goals": "29/34"
+    "wp_goals": "26/31"
   },
   {
     "baseline_group": "academic_functional_v1",
@@ -184,7 +176,6 @@
     "functional_backend_error_kind": null,
     "functional_backend_error_text": null,
     "functional_backend_status": "pass",
-    "functional_observed": "supported_end_to_end",
     "functional_wp_goals": "14/14",
     "helper_inference_claim": "positive",
     "id": "helper_struct_basic",
@@ -209,7 +200,7 @@
     },
     "probe_role": "helper_inference",
     "process_first_failed_stage": "-",
-    "public_export": null,
+    "public_export": true,
     "rewrite_of": null,
     "rte_goal_breakdown": {
       "array_bounds": {
@@ -238,18 +229,15 @@
         "unproved": 0
       }
     },
-    "rte_goal_count_kind": "wp_with_rte_goals",
-    "rte_reached": true,
     "rte_result": "rte_goals_proved",
     "rte_wp_goals": "14/14",
     "saida_output_parse_status": "pass",
     "saida_tricera_opts": null,
     "source_sha256": "0da818c583f40a521023afd7118f261949897a3a3c79a0ba2a40685909d51026",
-    "source_visibility": null,
+    "source_visibility": "public",
     "suspicious_contract_markers": [],
     "tricera_result_present": true,
-    "wp_goals": "14/14",
-    "wp_with_rte_goals": "14/14"
+    "wp_goals": "14/14"
   },
   {
     "baseline_group": "academic_functional_v1",
@@ -268,7 +256,6 @@
     "functional_backend_error_kind": null,
     "functional_backend_error_text": null,
     "functional_backend_status": "pass",
-    "functional_observed": "supported_end_to_end",
     "functional_wp_goals": "20/20",
     "helper_inference_claim": "positive",
     "id": "helper_enum_switch_basic",
@@ -293,7 +280,7 @@
     },
     "probe_role": "helper_inference",
     "process_first_failed_stage": "-",
-    "public_export": null,
+    "public_export": true,
     "rewrite_of": null,
     "rte_goal_breakdown": {
       "array_bounds": {
@@ -322,18 +309,15 @@
         "unproved": 0
       }
     },
-    "rte_goal_count_kind": "wp_with_rte_goals",
-    "rte_reached": true,
     "rte_result": "rte_goals_proved",
     "rte_wp_goals": "20/20",
     "saida_output_parse_status": "pass",
     "saida_tricera_opts": null,
     "source_sha256": "2bad208b9a1ffbd4754768395030bd0654a0c0dd6adbae1f8b8299cf8291e3b7",
-    "source_visibility": null,
+    "source_visibility": "public",
     "suspicious_contract_markers": [],
     "tricera_result_present": true,
-    "wp_goals": "20/20",
-    "wp_with_rte_goals": "20/20"
+    "wp_goals": "20/20"
   },
   {
     "baseline_group": "academic_functional_v1",
@@ -352,7 +336,6 @@
     "functional_backend_error_kind": "tricera_parser_error",
     "functional_backend_error_text": "Parse Error: At line 16, near \"{Here}(tar\" :     Unrecoverable Syntax Error",
     "functional_backend_status": "parser_error",
-    "functional_observed": "failed_at_func",
     "functional_wp_goals": "13/14",
     "helper_inference_claim": "positive",
     "id": "helper_valid_pointer_store",
@@ -377,7 +360,7 @@
     },
     "probe_role": "helper_inference",
     "process_first_failed_stage": "wp",
-    "public_export": null,
+    "public_export": true,
     "rewrite_of": null,
     "rte_goal_breakdown": {
       "array_bounds": {
@@ -406,18 +389,15 @@
         "unproved": 0
       }
     },
-    "rte_goal_count_kind": "wp_with_rte_goals",
-    "rte_reached": true,
     "rte_result": "failed_at_rte_wp_goals",
     "rte_wp_goals": "14/15",
     "saida_output_parse_status": "pass",
     "saida_tricera_opts": null,
     "source_sha256": "c6077d6e1a22b369466606997516538b77939b85c2547c49b299b41d25af2cbb",
-    "source_visibility": null,
+    "source_visibility": "public",
     "suspicious_contract_markers": [],
     "tricera_result_present": true,
-    "wp_goals": "13/14",
-    "wp_with_rte_goals": "14/15"
+    "wp_goals": "13/14"
   },
   {
     "baseline_group": "academic_functional_v1",
@@ -436,7 +416,6 @@
     "functional_backend_error_kind": null,
     "functional_backend_error_text": null,
     "functional_backend_status": "pass",
-    "functional_observed": "failed_at_wp",
     "functional_wp_goals": "34/36",
     "helper_inference_claim": "positive",
     "id": "helper_global_array_update",
@@ -461,7 +440,7 @@
     },
     "probe_role": "helper_inference",
     "process_first_failed_stage": "wp",
-    "public_export": null,
+    "public_export": true,
     "rewrite_of": null,
     "rte_goal_breakdown": {
       "array_bounds": {
@@ -490,18 +469,15 @@
         "unproved": 0
       }
     },
-    "rte_goal_count_kind": "wp_with_rte_goals",
-    "rte_reached": true,
     "rte_result": "failed_at_rte_wp_goals",
     "rte_wp_goals": "36/38",
     "saida_output_parse_status": "pass",
     "saida_tricera_opts": null,
     "source_sha256": "d5eac7493718f25e25395d07aeb5a1e302af34d14ec4eba206311dbc81150a8e",
-    "source_visibility": null,
+    "source_visibility": "public",
     "suspicious_contract_markers": [],
     "tricera_result_present": true,
-    "wp_goals": "34/36",
-    "wp_with_rte_goals": "36/38"
+    "wp_goals": "34/36"
   },
   {
     "baseline_group": "academic_functional_v1",
@@ -520,7 +496,6 @@
     "functional_backend_error_kind": null,
     "functional_backend_error_text": null,
     "functional_backend_status": "pass",
-    "functional_observed": "supported_end_to_end",
     "functional_wp_goals": "20/20",
     "helper_inference_claim": "positive",
     "id": "helper_assigns_old_basic",
@@ -545,7 +520,7 @@
     },
     "probe_role": "helper_inference",
     "process_first_failed_stage": "-",
-    "public_export": null,
+    "public_export": true,
     "rewrite_of": null,
     "rte_goal_breakdown": {
       "array_bounds": {
@@ -574,18 +549,15 @@
         "unproved": 0
       }
     },
-    "rte_goal_count_kind": "wp_with_rte_goals",
-    "rte_reached": true,
     "rte_result": "rte_goals_proved",
     "rte_wp_goals": "22/22",
     "saida_output_parse_status": "pass",
     "saida_tricera_opts": null,
     "source_sha256": "058e4b7c809280b5ea733d79e64a81d2da98bbe241657b76c6d08cd2bb4c4161",
-    "source_visibility": null,
+    "source_visibility": "public",
     "suspicious_contract_markers": [],
     "tricera_result_present": true,
-    "wp_goals": "20/20",
-    "wp_with_rte_goals": "22/22"
+    "wp_goals": "20/20"
   },
   {
     "baseline_group": "academic_functional_v1",
@@ -604,7 +576,6 @@
     "functional_backend_error_kind": null,
     "functional_backend_error_text": null,
     "functional_backend_status": "pass",
-    "functional_observed": "failed_at_func",
     "functional_wp_goals": "-",
     "helper_inference_claim": "negative",
     "id": "helper_stack_pointer",
@@ -629,21 +600,18 @@
     },
     "probe_role": "helper_inference",
     "process_first_failed_stage": "aux",
-    "public_export": null,
+    "public_export": true,
     "rewrite_of": null,
     "rte_goal_breakdown": null,
-    "rte_goal_count_kind": "not_reached",
-    "rte_reached": false,
     "rte_result": "rte_not_reached",
     "rte_wp_goals": "-",
     "saida_output_parse_status": "fail",
     "saida_tricera_opts": null,
     "source_sha256": "006d8e1b61b4f50435348f67e16673ffd3628728cfe0d30d9e2323907915bddf",
-    "source_visibility": null,
+    "source_visibility": "public",
     "suspicious_contract_markers": [],
     "tricera_result_present": true,
-    "wp_goals": "-",
-    "wp_with_rte_goals": "-"
+    "wp_goals": "-"
   },
   {
     "baseline_group": "academic_functional_v1",
@@ -662,7 +630,6 @@
     "functional_backend_error_kind": null,
     "functional_backend_error_text": null,
     "functional_backend_status": "pass",
-    "functional_observed": "supported_end_to_end",
     "functional_wp_goals": "27/27",
     "helper_inference_claim": "positive",
     "id": "helper_two_level_call_chain",
@@ -687,7 +654,7 @@
     },
     "probe_role": "helper_inference",
     "process_first_failed_stage": "-",
-    "public_export": null,
+    "public_export": true,
     "rewrite_of": null,
     "rte_goal_breakdown": {
       "array_bounds": {
@@ -716,18 +683,15 @@
         "unproved": 0
       }
     },
-    "rte_goal_count_kind": "wp_with_rte_goals",
-    "rte_reached": true,
     "rte_result": "rte_goals_proved",
     "rte_wp_goals": "29/29",
     "saida_output_parse_status": "pass",
     "saida_tricera_opts": null,
     "source_sha256": "efbb489bf1633308026ba7e4160c1b14f335cb917eed02a23649388998e3c34f",
-    "source_visibility": null,
+    "source_visibility": "public",
     "suspicious_contract_markers": [],
     "tricera_result_present": true,
-    "wp_goals": "27/27",
-    "wp_with_rte_goals": "29/29"
+    "wp_goals": "27/27"
   },
   {
     "baseline_group": "academic_functional_v1",
@@ -746,7 +710,6 @@
     "functional_backend_error_kind": null,
     "functional_backend_error_text": null,
     "functional_backend_status": "pass",
-    "functional_observed": "supported_end_to_end",
     "functional_wp_goals": "19/19",
     "helper_inference_claim": "positive",
     "id": "helper_multiple_call_contexts",
@@ -771,7 +734,7 @@
     },
     "probe_role": "helper_inference",
     "process_first_failed_stage": "-",
-    "public_export": null,
+    "public_export": true,
     "rewrite_of": null,
     "rte_goal_breakdown": {
       "array_bounds": {
@@ -800,18 +763,15 @@
         "unproved": 0
       }
     },
-    "rte_goal_count_kind": "wp_with_rte_goals",
-    "rte_reached": true,
     "rte_result": "rte_goals_proved",
     "rte_wp_goals": "22/22",
     "saida_output_parse_status": "pass",
     "saida_tricera_opts": null,
     "source_sha256": "e6af5680b30e5c5eba66165fbec5160b31538476ebb0018e28d6bf732a0c3fa5",
-    "source_visibility": null,
+    "source_visibility": "public",
     "suspicious_contract_markers": [],
     "tricera_result_present": true,
-    "wp_goals": "19/19",
-    "wp_with_rte_goals": "22/22"
+    "wp_goals": "19/19"
   },
   {
     "baseline_group": "academic_functional_v1",
@@ -830,7 +790,6 @@
     "functional_backend_error_kind": "tricera_parser_error",
     "functional_backend_error_text": "Parse Error: At line 16, near \"term recei\" :     Unrecoverable Syntax Error",
     "functional_backend_status": "parser_error",
-    "functional_observed": "failed_at_func",
     "functional_wp_goals": "14/15",
     "helper_inference_claim": "negative",
     "id": "contract_logic_function_helper",
@@ -855,7 +814,7 @@
     },
     "probe_role": "contract_guided_helper_inference",
     "process_first_failed_stage": "wp",
-    "public_export": null,
+    "public_export": true,
     "rewrite_of": null,
     "rte_goal_breakdown": {
       "array_bounds": {
@@ -884,18 +843,15 @@
         "unproved": 0
       }
     },
-    "rte_goal_count_kind": "wp_with_rte_goals",
-    "rte_reached": true,
     "rte_result": "failed_at_rte_wp_goals",
     "rte_wp_goals": "15/16",
     "saida_output_parse_status": "pass",
     "saida_tricera_opts": null,
     "source_sha256": "7dd7f4874e9f2d79c925115299dc7b164d9127e0f8bac3a984d8f1612e8dacb9",
-    "source_visibility": null,
+    "source_visibility": "public",
     "suspicious_contract_markers": [],
     "tricera_result_present": true,
-    "wp_goals": "14/15",
-    "wp_with_rte_goals": "15/16"
+    "wp_goals": "14/15"
   },
   {
     "baseline_group": "academic_functional_v1",
@@ -914,7 +870,6 @@
     "functional_backend_error_kind": "no_expected_helper_contract_blocks",
     "functional_backend_error_text": "TriCera result contains no expected helper contract blocks",
     "functional_backend_status": "missing_output",
-    "functional_observed": "failed_at_func",
     "functional_wp_goals": "15/17",
     "helper_inference_claim": "hypothesis",
     "id": "contract_behavior_helper",
@@ -939,7 +894,7 @@
     },
     "probe_role": "contract_guided_helper_inference",
     "process_first_failed_stage": "wp",
-    "public_export": null,
+    "public_export": true,
     "rewrite_of": null,
     "rte_goal_breakdown": {
       "array_bounds": {
@@ -968,18 +923,15 @@
         "unproved": 0
       }
     },
-    "rte_goal_count_kind": "wp_with_rte_goals",
-    "rte_reached": true,
     "rte_result": "failed_at_rte_wp_goals",
     "rte_wp_goals": "15/17",
     "saida_output_parse_status": "pass",
     "saida_tricera_opts": null,
     "source_sha256": "67ece23321126bababd971d3b83bf6808fb02fb3d63e76d4bcd8a1cd9c9596a3",
-    "source_visibility": null,
+    "source_visibility": "public",
     "suspicious_contract_markers": [],
     "tricera_result_present": true,
-    "wp_goals": "15/17",
-    "wp_with_rte_goals": "15/17"
+    "wp_goals": "15/17"
   },
   {
     "baseline_group": "academic_functional_v1",
@@ -998,7 +950,6 @@
     "functional_backend_error_kind": "tricera_parser_error",
     "functional_backend_error_text": "Parse Error: At line 14, near \"predicate\" :     Unrecoverable Syntax Error",
     "functional_backend_status": "parser_error",
-    "functional_observed": "failed_at_func",
     "functional_wp_goals": "13/15",
     "helper_inference_claim": "hypothesis",
     "id": "contract_predicate_helper",
@@ -1023,7 +974,7 @@
     },
     "probe_role": "contract_guided_helper_inference",
     "process_first_failed_stage": "wp",
-    "public_export": null,
+    "public_export": true,
     "rewrite_of": null,
     "rte_goal_breakdown": {
       "array_bounds": {
@@ -1052,18 +1003,15 @@
         "unproved": 0
       }
     },
-    "rte_goal_count_kind": "wp_with_rte_goals",
-    "rte_reached": true,
     "rte_result": "failed_at_rte_wp_goals",
     "rte_wp_goals": "13/15",
     "saida_output_parse_status": "pass",
     "saida_tricera_opts": null,
     "source_sha256": "42f12b520005a7fb7a070b17bf15e8429b8978b6b9630a0aaaceeeb3700ed523",
-    "source_visibility": null,
+    "source_visibility": "public",
     "suspicious_contract_markers": [],
     "tricera_result_present": true,
-    "wp_goals": "13/15",
-    "wp_with_rte_goals": "13/15"
+    "wp_goals": "13/15"
   },
   {
     "baseline_group": "academic_functional_v1",
@@ -1082,7 +1030,6 @@
     "functional_backend_error_kind": "horn_translation_error",
     "functional_backend_error_text": "Horn Translation Error: Unimplemented type: class tricera.concurrency.concurrent_c.Absyn.Ecfloat",
     "functional_backend_status": "translation_error",
-    "functional_observed": "failed_at_func",
     "functional_wp_goals": "9/13",
     "helper_inference_claim": "negative",
     "id": "helper_float_arithmetic",
@@ -1107,7 +1054,7 @@
     },
     "probe_role": "helper_inference",
     "process_first_failed_stage": "wp",
-    "public_export": null,
+    "public_export": true,
     "rewrite_of": null,
     "rte_goal_breakdown": {
       "array_bounds": {
@@ -1136,18 +1083,15 @@
         "unproved": 0
       }
     },
-    "rte_goal_count_kind": "wp_with_rte_goals",
-    "rte_reached": true,
     "rte_result": "failed_at_rte_wp_goals",
     "rte_wp_goals": "10/14",
     "saida_output_parse_status": "pass",
     "saida_tricera_opts": null,
     "source_sha256": "b7ea856927f1b65442727db4b018aacaa7b68f2a0fddc504f3665177fd2ca758",
-    "source_visibility": null,
+    "source_visibility": "public",
     "suspicious_contract_markers": [],
     "tricera_result_present": true,
-    "wp_goals": "9/13",
-    "wp_with_rte_goals": "10/14"
+    "wp_goals": "9/13"
   },
   {
     "baseline_group": "academic_functional_v1",
@@ -1166,7 +1110,6 @@
     "functional_backend_error_kind": "tricera_parser_error",
     "functional_backend_error_text": "Parse Error: At line 16, near \"{Here}(bas\" :     Unrecoverable Syntax Error",
     "functional_backend_status": "parser_error",
-    "functional_observed": "failed_at_func",
     "functional_wp_goals": "-",
     "helper_inference_claim": "negative",
     "id": "helper_pointer_arithmetic",
@@ -1191,21 +1134,18 @@
     },
     "probe_role": "helper_inference",
     "process_first_failed_stage": "aux",
-    "public_export": null,
+    "public_export": true,
     "rewrite_of": null,
     "rte_goal_breakdown": null,
-    "rte_goal_count_kind": "not_reached",
-    "rte_reached": false,
     "rte_result": "rte_not_reached",
     "rte_wp_goals": "-",
     "saida_output_parse_status": "pass",
     "saida_tricera_opts": null,
     "source_sha256": "17d6c342500a0f32e4cb964eb3b8d7dbc2bcc35600564e58ba2188fad80dcf6c",
-    "source_visibility": null,
+    "source_visibility": "public",
     "suspicious_contract_markers": [],
     "tricera_result_present": true,
-    "wp_goals": "-",
-    "wp_with_rte_goals": "-"
+    "wp_goals": "-"
   },
   {
     "baseline_group": "academic_functional_v1",
@@ -1224,7 +1164,6 @@
     "functional_backend_error_kind": "tricera_parser_error",
     "functional_backend_error_text": "Parse Error: At line 16, near \"{Here}(tar\" :     Unrecoverable Syntax Error",
     "functional_backend_status": "parser_error",
-    "functional_observed": "failed_at_func",
     "functional_wp_goals": "8/10",
     "helper_inference_claim": "negative",
     "id": "helper_nested_pointer",
@@ -1249,7 +1188,7 @@
     },
     "probe_role": "helper_inference",
     "process_first_failed_stage": "wp",
-    "public_export": null,
+    "public_export": true,
     "rewrite_of": null,
     "rte_goal_breakdown": {
       "array_bounds": {
@@ -1278,18 +1217,15 @@
         "unproved": 2
       }
     },
-    "rte_goal_count_kind": "wp_with_rte_goals",
-    "rte_reached": true,
     "rte_result": "failed_at_rte_wp_goals",
     "rte_wp_goals": "8/12",
     "saida_output_parse_status": "pass",
     "saida_tricera_opts": null,
     "source_sha256": "4fc877a8e8f8ac5e940d317c78b10f030b8ac40f44919902a24cbcb832ff3604",
-    "source_visibility": null,
+    "source_visibility": "public",
     "suspicious_contract_markers": [],
     "tricera_result_present": true,
-    "wp_goals": "8/10",
-    "wp_with_rte_goals": "8/12"
+    "wp_goals": "8/10"
   },
   {
     "baseline_group": "academic_functional_v1",
@@ -1308,7 +1244,6 @@
     "functional_backend_error_kind": null,
     "functional_backend_error_text": null,
     "functional_backend_status": "pass",
-    "functional_observed": "failed_at_wp",
     "functional_wp_goals": "11/16",
     "helper_inference_claim": "negative",
     "id": "helper_loop_without_invariant",
@@ -1333,7 +1268,7 @@
     },
     "probe_role": "helper_inference",
     "process_first_failed_stage": "wp",
-    "public_export": null,
+    "public_export": true,
     "rewrite_of": null,
     "rte_goal_breakdown": {
       "array_bounds": {
@@ -1362,18 +1297,15 @@
         "unproved": 0
       }
     },
-    "rte_goal_count_kind": "wp_with_rte_goals",
-    "rte_reached": true,
     "rte_result": "failed_at_rte_wp_goals",
     "rte_wp_goals": "13/18",
     "saida_output_parse_status": "pass",
     "saida_tricera_opts": null,
     "source_sha256": "4b243cc6a0b5eccf53d74b2b583fc2ae739c4aa3cc772e16d59fdf4c9d505488",
-    "source_visibility": null,
+    "source_visibility": "public",
     "suspicious_contract_markers": [],
     "tricera_result_present": true,
-    "wp_goals": "11/16",
-    "wp_with_rte_goals": "13/18"
+    "wp_goals": "11/16"
   },
   {
     "baseline_group": "academic_functional_v1",
@@ -1392,7 +1324,6 @@
     "functional_backend_error_kind": null,
     "functional_backend_error_text": null,
     "functional_backend_status": "pass",
-    "functional_observed": "supported_end_to_end",
     "functional_wp_goals": "13/13",
     "helper_inference_claim": "positive",
     "id": "helper_valid_pointer_store_simpler",
@@ -1417,7 +1348,7 @@
     },
     "probe_role": "helper_inference",
     "process_first_failed_stage": "-",
-    "public_export": null,
+    "public_export": true,
     "rewrite_of": "helper_valid_pointer_store",
     "rte_goal_breakdown": {
       "array_bounds": {
@@ -1446,18 +1377,15 @@
         "unproved": 0
       }
     },
-    "rte_goal_count_kind": "wp_with_rte_goals",
-    "rte_reached": true,
     "rte_result": "rte_goals_proved",
     "rte_wp_goals": "14/14",
     "saida_output_parse_status": "pass",
     "saida_tricera_opts": null,
     "source_sha256": "effaf0a316777fbf9e1052dc648c4a4465a3f2ceaa531b983601784b4d12f683",
-    "source_visibility": null,
+    "source_visibility": "public",
     "suspicious_contract_markers": [],
     "tricera_result_present": true,
-    "wp_goals": "13/13",
-    "wp_with_rte_goals": "14/14"
+    "wp_goals": "13/13"
   },
   {
     "baseline_group": "academic_functional_v1",
@@ -1476,7 +1404,6 @@
     "functional_backend_error_kind": null,
     "functional_backend_error_text": null,
     "functional_backend_status": "pass",
-    "functional_observed": "failed_at_wp",
     "functional_wp_goals": "13/14",
     "helper_inference_claim": "positive",
     "id": "helper_global_array_update_fixed_index",
@@ -1501,7 +1428,7 @@
     },
     "probe_role": "helper_inference",
     "process_first_failed_stage": "wp",
-    "public_export": null,
+    "public_export": true,
     "rewrite_of": "helper_global_array_update",
     "rte_goal_breakdown": {
       "array_bounds": {
@@ -1530,18 +1457,15 @@
         "unproved": 0
       }
     },
-    "rte_goal_count_kind": "wp_with_rte_goals",
-    "rte_reached": true,
     "rte_result": "failed_at_rte_wp_goals",
     "rte_wp_goals": "13/14",
     "saida_output_parse_status": "pass",
     "saida_tricera_opts": null,
     "source_sha256": "55cb3fd6efcf0f3dd884e5855303bd074e91feb758d94b2e21aaff0fba13da02",
-    "source_visibility": null,
+    "source_visibility": "public",
     "suspicious_contract_markers": [],
     "tricera_result_present": true,
-    "wp_goals": "13/14",
-    "wp_with_rte_goals": "13/14"
+    "wp_goals": "13/14"
   },
   {
     "baseline_group": "academic_functional_v1",
@@ -1560,7 +1484,6 @@
     "functional_backend_error_kind": null,
     "functional_backend_error_text": null,
     "functional_backend_status": "pass",
-    "functional_observed": "supported_end_to_end",
     "functional_wp_goals": "25/25",
     "helper_inference_claim": "hypothesis",
     "id": "helper_struct_return_whole",
@@ -1585,7 +1508,7 @@
     },
     "probe_role": "helper_inference",
     "process_first_failed_stage": "-",
-    "public_export": null,
+    "public_export": true,
     "rewrite_of": null,
     "rte_goal_breakdown": {
       "array_bounds": {
@@ -1614,18 +1537,15 @@
         "unproved": 0
       }
     },
-    "rte_goal_count_kind": "wp_with_rte_goals",
-    "rte_reached": true,
     "rte_result": "rte_goals_proved",
     "rte_wp_goals": "26/26",
     "saida_output_parse_status": "pass",
     "saida_tricera_opts": null,
     "source_sha256": "b5419afeb448e02dd4afa3daa308f83f78490c86dde6d22c23a426a2ac4f0c13",
-    "source_visibility": null,
+    "source_visibility": "public",
     "suspicious_contract_markers": [],
     "tricera_result_present": true,
-    "wp_goals": "25/25",
-    "wp_with_rte_goals": "26/26"
+    "wp_goals": "25/25"
   },
   {
     "baseline_group": "academic_functional_v1",
@@ -1644,7 +1564,6 @@
     "functional_backend_error_kind": null,
     "functional_backend_error_text": null,
     "functional_backend_status": "pass",
-    "functional_observed": "failed_at_aux",
     "functional_wp_goals": "-",
     "helper_inference_claim": "hypothesis",
     "id": "helper_enum_indexed_array_struct_return",
@@ -1669,21 +1588,18 @@
     },
     "probe_role": "helper_inference",
     "process_first_failed_stage": "aux",
-    "public_export": null,
+    "public_export": true,
     "rewrite_of": null,
     "rte_goal_breakdown": null,
-    "rte_goal_count_kind": "not_reached",
-    "rte_reached": false,
     "rte_result": "rte_not_reached",
     "rte_wp_goals": "-",
     "saida_output_parse_status": "pass",
     "saida_tricera_opts": null,
     "source_sha256": "22270999b52f93cb5e79326f59da19b7334fa4078e27247da221d53b964ce71a",
-    "source_visibility": null,
+    "source_visibility": "public",
     "suspicious_contract_markers": [],
     "tricera_result_present": true,
-    "wp_goals": "-",
-    "wp_with_rte_goals": "-"
+    "wp_goals": "-"
   },
   {
     "baseline_group": "academic_functional_v1",
@@ -1702,7 +1618,6 @@
     "functional_backend_error_kind": null,
     "functional_backend_error_text": null,
     "functional_backend_status": "pass",
-    "functional_observed": "failed_at_aux",
     "functional_wp_goals": "-",
     "helper_inference_claim": "hypothesis",
     "id": "helper_array_struct_output_parameter_rewrite",
@@ -1727,21 +1642,18 @@
     },
     "probe_role": "helper_inference",
     "process_first_failed_stage": "aux",
-    "public_export": null,
+    "public_export": true,
     "rewrite_of": "helper_enum_indexed_array_struct_return",
     "rte_goal_breakdown": null,
-    "rte_goal_count_kind": "not_reached",
-    "rte_reached": false,
     "rte_result": "rte_not_reached",
     "rte_wp_goals": "-",
     "saida_output_parse_status": "pass",
     "saida_tricera_opts": null,
     "source_sha256": "806274d6976e556b2a3378435fb832a5d835ece70be3d0cd5406ab1fffe4f89d",
-    "source_visibility": null,
+    "source_visibility": "public",
     "suspicious_contract_markers": [],
     "tricera_result_present": true,
-    "wp_goals": "-",
-    "wp_with_rte_goals": "-"
+    "wp_goals": "-"
   },
   {
     "baseline_group": "academic_functional_v1",
@@ -1760,7 +1672,6 @@
     "functional_backend_error_kind": null,
     "functional_backend_error_text": null,
     "functional_backend_status": "pass",
-    "functional_observed": "failed_at_aux",
     "functional_wp_goals": "-",
     "helper_inference_claim": "hypothesis",
     "id": "helper_int_indexed_array_struct_return",
@@ -1785,21 +1696,18 @@
     },
     "probe_role": "helper_inference",
     "process_first_failed_stage": "aux",
-    "public_export": null,
+    "public_export": true,
     "rewrite_of": null,
     "rte_goal_breakdown": null,
-    "rte_goal_count_kind": "not_reached",
-    "rte_reached": false,
     "rte_result": "rte_not_reached",
     "rte_wp_goals": "-",
     "saida_output_parse_status": "pass",
     "saida_tricera_opts": null,
     "source_sha256": "48805f71975d7d172dfa962ae86f6a88f5c8b4c5bab92e254186225450b3ac43",
-    "source_visibility": null,
+    "source_visibility": "public",
     "suspicious_contract_markers": [],
     "tricera_result_present": true,
-    "wp_goals": "-",
-    "wp_with_rte_goals": "-"
+    "wp_goals": "-"
   },
   {
     "baseline_group": "academic_functional_v1",
@@ -1818,7 +1726,6 @@
     "functional_backend_error_kind": null,
     "functional_backend_error_text": null,
     "functional_backend_status": "pass",
-    "functional_observed": "failed_at_aux",
     "functional_wp_goals": "-",
     "helper_inference_claim": "hypothesis",
     "id": "helper_int_indexed_array_scalar_return",
@@ -1843,21 +1750,18 @@
     },
     "probe_role": "helper_inference",
     "process_first_failed_stage": "aux",
-    "public_export": null,
+    "public_export": true,
     "rewrite_of": "helper_enum_indexed_array_struct_return",
     "rte_goal_breakdown": null,
-    "rte_goal_count_kind": "not_reached",
-    "rte_reached": false,
     "rte_result": "rte_not_reached",
     "rte_wp_goals": "-",
     "saida_output_parse_status": "pass",
     "saida_tricera_opts": null,
     "source_sha256": "caf8687665a2bb201c4e7c47a335b7ab35d538cc872b6ee98d78eb716239e596",
-    "source_visibility": null,
+    "source_visibility": "public",
     "suspicious_contract_markers": [],
     "tricera_result_present": true,
-    "wp_goals": "-",
-    "wp_with_rte_goals": "-"
+    "wp_goals": "-"
   },
   {
     "baseline_group": "academic_functional_v1",
@@ -1876,7 +1780,6 @@
     "functional_backend_error_kind": null,
     "functional_backend_error_text": null,
     "functional_backend_status": "pass",
-    "functional_observed": "supported_end_to_end",
     "functional_wp_goals": "17/17",
     "helper_inference_claim": "hypothesis",
     "id": "helper_stack_pointer_return_value_rewrite",
@@ -1901,7 +1804,7 @@
     },
     "probe_role": "helper_inference",
     "process_first_failed_stage": "-",
-    "public_export": null,
+    "public_export": true,
     "rewrite_of": "helper_stack_pointer",
     "rte_goal_breakdown": {
       "array_bounds": {
@@ -1930,18 +1833,15 @@
         "unproved": 0
       }
     },
-    "rte_goal_count_kind": "wp_with_rte_goals",
-    "rte_reached": true,
     "rte_result": "rte_goals_proved",
     "rte_wp_goals": "17/17",
     "saida_output_parse_status": "pass",
     "saida_tricera_opts": null,
     "source_sha256": "982912fb753026242cd7e21a81b5feec259f4735dfae82c008c8262f9b5ea791",
-    "source_visibility": null,
+    "source_visibility": "public",
     "suspicious_contract_markers": [],
     "tricera_result_present": true,
-    "wp_goals": "17/17",
-    "wp_with_rte_goals": "17/17"
+    "wp_goals": "17/17"
   },
   {
     "baseline_group": "academic_functional_v1",
@@ -1960,7 +1860,6 @@
     "functional_backend_error_kind": null,
     "functional_backend_error_text": null,
     "functional_backend_status": "pass",
-    "functional_observed": "supported_end_to_end",
     "functional_wp_goals": "17/17",
     "helper_inference_claim": "hypothesis",
     "id": "contract_logic_inline_rewrite",
@@ -1985,7 +1884,7 @@
     },
     "probe_role": "contract_guided_helper_inference",
     "process_first_failed_stage": "-",
-    "public_export": null,
+    "public_export": true,
     "rewrite_of": "contract_logic_function_helper",
     "rte_goal_breakdown": {
       "array_bounds": {
@@ -2014,18 +1913,15 @@
         "unproved": 0
       }
     },
-    "rte_goal_count_kind": "wp_with_rte_goals",
-    "rte_reached": true,
     "rte_result": "rte_goals_proved",
     "rte_wp_goals": "18/18",
     "saida_output_parse_status": "pass",
     "saida_tricera_opts": null,
     "source_sha256": "8fe18ab5f0ea060c2dce42f4cb97077792bebf7858dbf84380c127b8c8e56d81",
-    "source_visibility": null,
+    "source_visibility": "public",
     "suspicious_contract_markers": [],
     "tricera_result_present": true,
-    "wp_goals": "17/17",
-    "wp_with_rte_goals": "18/18"
+    "wp_goals": "17/17"
   },
   {
     "baseline_group": "academic_functional_v1",
@@ -2044,7 +1940,6 @@
     "functional_backend_error_kind": null,
     "functional_backend_error_text": null,
     "functional_backend_status": "pass",
-    "functional_observed": "supported_end_to_end",
     "functional_wp_goals": "17/17",
     "helper_inference_claim": "hypothesis",
     "id": "contract_behavior_plain_ensures_rewrite",
@@ -2069,7 +1964,7 @@
     },
     "probe_role": "contract_guided_helper_inference",
     "process_first_failed_stage": "-",
-    "public_export": null,
+    "public_export": true,
     "rewrite_of": "contract_behavior_helper",
     "rte_goal_breakdown": {
       "array_bounds": {
@@ -2098,18 +1993,15 @@
         "unproved": 0
       }
     },
-    "rte_goal_count_kind": "wp_with_rte_goals",
-    "rte_reached": true,
     "rte_result": "rte_goals_proved",
     "rte_wp_goals": "17/17",
     "saida_output_parse_status": "pass",
     "saida_tricera_opts": null,
     "source_sha256": "ce673ad5a287df7ad21073d89b22eb7b955676945532fe7bd6e04c2baf8841da",
-    "source_visibility": null,
+    "source_visibility": "public",
     "suspicious_contract_markers": [],
     "tricera_result_present": true,
-    "wp_goals": "17/17",
-    "wp_with_rte_goals": "17/17"
+    "wp_goals": "17/17"
   },
   {
     "baseline_group": "academic_functional_v1",
@@ -2128,7 +2020,6 @@
     "functional_backend_error_kind": null,
     "functional_backend_error_text": null,
     "functional_backend_status": "pass",
-    "functional_observed": "supported_end_to_end",
     "functional_wp_goals": "17/17",
     "helper_inference_claim": "hypothesis",
     "id": "contract_predicate_inline_rewrite",
@@ -2153,7 +2044,7 @@
     },
     "probe_role": "contract_guided_helper_inference",
     "process_first_failed_stage": "-",
-    "public_export": null,
+    "public_export": true,
     "rewrite_of": "contract_predicate_helper",
     "rte_goal_breakdown": {
       "array_bounds": {
@@ -2182,18 +2073,15 @@
         "unproved": 0
       }
     },
-    "rte_goal_count_kind": "wp_with_rte_goals",
-    "rte_reached": true,
     "rte_result": "rte_goals_proved",
     "rte_wp_goals": "17/17",
     "saida_output_parse_status": "pass",
     "saida_tricera_opts": null,
     "source_sha256": "14f146f4145dd9a97d95b5cbcca9985ae8150d1c80cad7684e2a0c2c8690b083",
-    "source_visibility": null,
+    "source_visibility": "public",
     "suspicious_contract_markers": [],
     "tricera_result_present": true,
-    "wp_goals": "17/17",
-    "wp_with_rte_goals": "17/17"
+    "wp_goals": "17/17"
   },
   {
     "baseline_group": "academic_functional_v1",
@@ -2212,7 +2100,6 @@
     "functional_backend_error_kind": null,
     "functional_backend_error_text": null,
     "functional_backend_status": "pass",
-    "functional_observed": "failed_at_wp",
     "functional_wp_goals": "20/21",
     "helper_inference_claim": "hypothesis",
     "id": "helper_int_indexed_scalar_array_return",
@@ -2237,7 +2124,7 @@
     },
     "probe_role": "helper_inference",
     "process_first_failed_stage": "wp",
-    "public_export": null,
+    "public_export": true,
     "rewrite_of": "helper_int_indexed_array_scalar_return",
     "rte_goal_breakdown": {
       "array_bounds": {
@@ -2266,18 +2153,15 @@
         "unproved": 0
       }
     },
-    "rte_goal_count_kind": "wp_with_rte_goals",
-    "rte_reached": true,
     "rte_result": "failed_at_rte_wp_goals",
     "rte_wp_goals": "22/23",
     "saida_output_parse_status": "pass",
     "saida_tricera_opts": null,
     "source_sha256": "73a40c5631a60bffb1091eb24efc8e90ed27169949b10146c860c961c71b0a88",
-    "source_visibility": null,
+    "source_visibility": "public",
     "suspicious_contract_markers": [],
     "tricera_result_present": true,
-    "wp_goals": "20/21",
-    "wp_with_rte_goals": "22/23"
+    "wp_goals": "20/21"
   },
   {
     "baseline_group": "academic_functional_v1",
@@ -2296,7 +2180,6 @@
     "functional_backend_error_kind": null,
     "functional_backend_error_text": null,
     "functional_backend_status": "pass",
-    "functional_observed": "failed_at_wp",
     "functional_wp_goals": "17/18",
     "helper_inference_claim": "hypothesis",
     "id": "helper_fixed_index_array_struct_scalar_return",
@@ -2321,7 +2204,7 @@
     },
     "probe_role": "helper_inference",
     "process_first_failed_stage": "wp",
-    "public_export": null,
+    "public_export": true,
     "rewrite_of": "helper_int_indexed_array_scalar_return",
     "rte_goal_breakdown": {
       "array_bounds": {
@@ -2350,18 +2233,15 @@
         "unproved": 0
       }
     },
-    "rte_goal_count_kind": "wp_with_rte_goals",
-    "rte_reached": true,
     "rte_result": "failed_at_rte_wp_goals",
     "rte_wp_goals": "17/18",
     "saida_output_parse_status": "pass",
     "saida_tricera_opts": null,
     "source_sha256": "4123afca4ff56bfa60960a4d5c475b5dae51ef8c173b05549cec96579b58d77c",
-    "source_visibility": null,
+    "source_visibility": "public",
     "suspicious_contract_markers": [],
     "tricera_result_present": true,
-    "wp_goals": "17/18",
-    "wp_with_rte_goals": "17/18"
+    "wp_goals": "17/18"
   },
   {
     "baseline_group": "academic_functional_v1",
@@ -2380,7 +2260,6 @@
     "functional_backend_error_kind": null,
     "functional_backend_error_text": null,
     "functional_backend_status": "pass",
-    "functional_observed": "failed_at_wp",
     "functional_wp_goals": "13/15",
     "helper_inference_claim": "hypothesis",
     "id": "helper_single_global_struct_scalar_return",
@@ -2405,7 +2284,7 @@
     },
     "probe_role": "helper_inference",
     "process_first_failed_stage": "wp",
-    "public_export": null,
+    "public_export": true,
     "rewrite_of": "helper_fixed_index_array_struct_scalar_return",
     "rte_goal_breakdown": {
       "array_bounds": {
@@ -2434,17 +2313,249 @@
         "unproved": 0
       }
     },
-    "rte_goal_count_kind": "wp_with_rte_goals",
-    "rte_reached": true,
     "rte_result": "failed_at_rte_wp_goals",
     "rte_wp_goals": "13/15",
     "saida_output_parse_status": "pass",
     "saida_tricera_opts": null,
     "source_sha256": "86f090db831dc3fb25950ce14ac16e44af9fb3440ffda88e7e15d659c493a553",
-    "source_visibility": null,
+    "source_visibility": "public",
     "suspicious_contract_markers": [],
     "tricera_result_present": true,
-    "wp_goals": "13/15",
-    "wp_with_rte_goals": "13/15"
+    "wp_goals": "13/15"
+  },
+  {
+    "baseline_group": "academic_functional_v2",
+    "baseline_groups": [
+      "academic_functional_v3"
+    ],
+    "conclusion": "failed_at_func",
+    "direct_or_rewrite_relation": "direct",
+    "evaluation_profile": "configured_tricera_profile",
+    "evidence_first_failed_stage": "func_backend_parser",
+    "evidence_role": "helper_inference_probe",
+    "evidence_tier": "tier_1_helper_inference",
+    "expected_support": "boundary",
+    "feature_location": "entry_contract",
+    "functional_backend_error_kind": "tricera_parser_error",
+    "functional_backend_error_text": "Parse Error: At line 62, near \"term recei\" :     Unrecoverable Syntax Error",
+    "functional_backend_status": "parser_error",
+    "functional_wp_goals": "12/12",
+    "helper_inference_claim": "negative",
+    "id": "contract_old_logic_alias_reproducer",
+    "inference_evidence": "tricera_error",
+    "inferred_contract_quality": "missing",
+    "inferred_contract_quality_reason": "generated Saida output contains a missing-contract marker",
+    "inferred_helper_contract_count": 0,
+    "kind": "micro_backend_boundary_reproducer",
+    "lib_entry": true,
+    "missing_inferred_contract_count": 1,
+    "module": "micro",
+    "observed": "failed_at_func",
+    "paper_limit": "old_state_logic_alias_backend_translation",
+    "paper_model_input_classification": null,
+    "phase_statuses": {
+      "autodeduct_full": "unknown",
+      "aux": "pass",
+      "frama_parse": "pass",
+      "func": "pass",
+      "rte_wp": "pass",
+      "wp": "pass"
+    },
+    "probe_role": "contract_guided_helper_inference",
+    "process_first_failed_stage": "-",
+    "public_export": true,
+    "rewrite_of": null,
+    "rte_goal_breakdown": {
+      "array_bounds": {
+        "proved": 0,
+        "reported": 0,
+        "unproved": 0
+      },
+      "floating_point": {
+        "proved": 0,
+        "reported": 0,
+        "unproved": 0
+      },
+      "integer_overflow": {
+        "proved": 0,
+        "reported": 0,
+        "unproved": 0
+      },
+      "other_rte": {
+        "proved": 0,
+        "reported": 0,
+        "unproved": 0
+      },
+      "pointer_validity": {
+        "proved": 0,
+        "reported": 0,
+        "unproved": 0
+      }
+    },
+    "rte_result": "rte_goals_proved",
+    "rte_wp_goals": "12/12",
+    "saida_output_parse_status": "pass",
+    "saida_tricera_opts": "-cpp -acsl",
+    "source_sha256": "3cee37f5d2c744366cdbde1f761ce8012f7bd6d48cafa0900558133d376234a4",
+    "source_visibility": "public_safe_synthetic",
+    "suspicious_contract_markers": [],
+    "tricera_result_present": true,
+    "wp_goals": "12/12"
+  },
+  {
+    "baseline_group": "academic_functional_v2",
+    "baseline_groups": [
+      "academic_functional_v3"
+    ],
+    "conclusion": "failed_at_func",
+    "direct_or_rewrite_relation": "direct",
+    "evaluation_profile": "configured_tricera_profile",
+    "evidence_first_failed_stage": "func_backend_output",
+    "evidence_role": "helper_inference_probe",
+    "evidence_tier": "tier_1_helper_inference",
+    "expected_support": "boundary",
+    "feature_location": "helper_call_order",
+    "functional_backend_error_kind": "no_expected_helper_contract_blocks",
+    "functional_backend_error_text": "TriCera result contains no expected helper contract blocks",
+    "functional_backend_status": "missing_output",
+    "functional_wp_goals": "11/11",
+    "helper_inference_claim": "negative",
+    "id": "helper_missing_forward_declaration",
+    "inference_evidence": "missing_helper_contracts",
+    "inferred_contract_quality": "missing",
+    "inferred_contract_quality_reason": "generated Saida output contains a missing-contract marker",
+    "inferred_helper_contract_count": 0,
+    "kind": "micro_backend_boundary_reproducer",
+    "lib_entry": true,
+    "missing_inferred_contract_count": 1,
+    "module": "micro",
+    "observed": "failed_at_func",
+    "paper_limit": "missing_forward_declaration_backend_symbol",
+    "paper_model_input_classification": null,
+    "phase_statuses": {
+      "autodeduct_full": "unknown",
+      "aux": "pass",
+      "frama_parse": "pass",
+      "func": "pass",
+      "rte_wp": "pass",
+      "wp": "pass"
+    },
+    "probe_role": "helper_inference",
+    "process_first_failed_stage": "-",
+    "public_export": true,
+    "rewrite_of": null,
+    "rte_goal_breakdown": {
+      "array_bounds": {
+        "proved": 0,
+        "reported": 0,
+        "unproved": 0
+      },
+      "floating_point": {
+        "proved": 0,
+        "reported": 0,
+        "unproved": 0
+      },
+      "integer_overflow": {
+        "proved": 0,
+        "reported": 0,
+        "unproved": 0
+      },
+      "other_rte": {
+        "proved": 0,
+        "reported": 0,
+        "unproved": 0
+      },
+      "pointer_validity": {
+        "proved": 0,
+        "reported": 0,
+        "unproved": 0
+      }
+    },
+    "rte_result": "rte_goals_proved",
+    "rte_wp_goals": "11/11",
+    "saida_output_parse_status": "pass",
+    "saida_tricera_opts": "-cpp -acsl",
+    "source_sha256": "10613b90bcbd4d769fd9b99644c3498159c735cc70c0fefb142022d1b7c9e5b9",
+    "source_visibility": "public_safe_synthetic",
+    "suspicious_contract_markers": [],
+    "tricera_result_present": true,
+    "wp_goals": "11/11"
+  },
+  {
+    "baseline_group": "academic_functional_v3",
+    "baseline_groups": null,
+    "conclusion": "failed_at_func",
+    "direct_or_rewrite_relation": "rewrite_of:contract_old_logic_alias_reproducer",
+    "evaluation_profile": "configured_tricera_profile",
+    "evidence_first_failed_stage": "func_backend_parser",
+    "evidence_role": "helper_inference_probe",
+    "evidence_tier": "tier_1_helper_inference",
+    "expected_support": "boundary",
+    "feature_location": "entry_contract",
+    "functional_backend_error_kind": "tricera_parser_error",
+    "functional_backend_error_text": "Parse Error: At line 62, near \"term recei\" :     Unrecoverable Syntax Error",
+    "functional_backend_status": "parser_error",
+    "functional_wp_goals": "12/12",
+    "helper_inference_claim": "negative",
+    "id": "contract_old_logic_alias_inline_rewrite",
+    "inference_evidence": "tricera_error",
+    "inferred_contract_quality": "missing",
+    "inferred_contract_quality_reason": "generated Saida output contains a missing-contract marker",
+    "inferred_helper_contract_count": 0,
+    "kind": "micro_backend_boundary_rewrite",
+    "lib_entry": true,
+    "missing_inferred_contract_count": 1,
+    "module": "micro",
+    "observed": "failed_at_func",
+    "paper_limit": "old_state_logic_alias_backend_translation",
+    "paper_model_input_classification": null,
+    "phase_statuses": {
+      "autodeduct_full": "unknown",
+      "aux": "pass",
+      "frama_parse": "pass",
+      "func": "pass",
+      "rte_wp": "pass",
+      "wp": "pass"
+    },
+    "probe_role": "contract_guided_helper_inference",
+    "process_first_failed_stage": "-",
+    "public_export": true,
+    "rewrite_of": "contract_old_logic_alias_reproducer",
+    "rte_goal_breakdown": {
+      "array_bounds": {
+        "proved": 0,
+        "reported": 0,
+        "unproved": 0
+      },
+      "floating_point": {
+        "proved": 0,
+        "reported": 0,
+        "unproved": 0
+      },
+      "integer_overflow": {
+        "proved": 0,
+        "reported": 0,
+        "unproved": 0
+      },
+      "other_rte": {
+        "proved": 0,
+        "reported": 0,
+        "unproved": 0
+      },
+      "pointer_validity": {
+        "proved": 0,
+        "reported": 0,
+        "unproved": 0
+      }
+    },
+    "rte_result": "rte_goals_proved",
+    "rte_wp_goals": "12/12",
+    "saida_output_parse_status": "pass",
+    "saida_tricera_opts": "-cpp -acsl",
+    "source_sha256": "baae38981af1c07a818d4e832f0e861011ac3ace4c24339b194f405a06ac5fb0",
+    "source_visibility": "public_safe_synthetic",
+    "suspicious_contract_markers": [],
+    "tricera_result_present": true,
+    "wp_goals": "12/12"
   }
 ]

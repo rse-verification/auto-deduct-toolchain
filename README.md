@@ -1,8 +1,10 @@
 ## AutoDeduct Academic Support Evaluation
 
-This branch includes a public-safe, source-linked evaluation of the AutoDeduct helper-inference pipeline. It contains 31 exact C/ACSL probes and reductions and no industrial case-study source.
+This branch includes a public-safe, source-linked evaluation of the AutoDeduct helper-inference pipeline. It contains 34 exact C/ACSL probes and reductions and no industrial case-study source.
 
-The frozen functional snapshot contains 12 end-to-end supported rows, 9 functional boundaries, 4 auxiliary boundaries, and 6 WP boundaries. These numbers describe the selected probe corpus; they are not a percentage of C or ACSL support.
+The frozen functional snapshot contains 12 end-to-end supported rows, 12 functional boundaries, 4 auxiliary boundaries, and 6 WP boundaries. These numbers describe the selected probe corpus; they are not a percentage of C or ACSL support.
+
+Three newly published probes cover two issue families: old-state logic-alias translation, with a direct probe and a partial inline rewrite, and missing helper forward declarations.
 
 The direct/rewrite pairs keep AutoDeduct unchanged and modify the input source or specification. They show input-level workarounds and candidates for future tool automation, not completed tool improvements.
 

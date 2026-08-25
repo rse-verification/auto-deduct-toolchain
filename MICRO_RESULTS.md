@@ -1,6 +1,6 @@
 # AutoDeduct Public Micro Results
 
-This report summarizes the public-safe academic v3 probes. Every result applies only to the exact source, entry contract, tool versions, and command profile used by the probe.
+This report summarizes the 34 public-safe academic v3 source probes. Every result applies only to the exact source, entry contract, tool versions, and command profile used by the probe.
 
 ## Evaluation profiles
 
@@ -17,8 +17,8 @@ The RTE-enabled profile runs WP with runtime checks enabled. Its goal totals inc
 
 | Snapshot | Rows | Results |
 |---|---:|---|
-| Functional academic v3 | 31 | 12 supported end to end; 9 functional boundaries; 4 auxiliary boundaries; 6 WP boundaries |
-| RTE academic v3 | 31 | 12 complete RTE-enabled WP rows; 13 incomplete rows; 6 rows where RTE-enabled WP was not reached |
+| Functional academic v3 | 34 | 12 supported end to end; 12 functional boundaries; 4 auxiliary boundaries; 6 WP boundaries |
+| RTE academic v3 | 34 | 15 complete RTE-enabled WP rows; 13 incomplete rows; 6 rows where RTE-enabled WP was not reached |
 
 ## How to read the table
 
@@ -65,6 +65,9 @@ The direct/rewrite pairs modify the input while keeping AutoDeduct unchanged. Th
 | [`helper_int_indexed_scalar_array_return`](autodeduct-support/micro-tests/helper_inference/helper_int_indexed_scalar_array_return.c) | Dynamic index into a scalar array | WP boundary | One proof goal remains | 20/21 |
 | [`helper_fixed_index_array_struct_scalar_return`](autodeduct-support/micro-tests/helper_inference/helper_fixed_index_array_struct_scalar_return.c) | Fixed index into an array of structs; scalar return | WP boundary | One proof goal remains | 17/18 |
 | [`helper_single_global_struct_scalar_return`](autodeduct-support/micro-tests/helper_inference/helper_single_global_struct_scalar_return.c) | Single global struct; scalar-field return | WP boundary | Two proof goals remain | 13/15 |
+| [`contract_old_logic_alias_reproducer`](autodeduct-support/micro-tests/helper_inference/contract_old_logic_alias_reproducer.c) | Old-state scalar/struct ACSL logic aliases | Functional boundary | TriCera parser error: `func_backend_parser` | Later control: 12/12 |
+| [`contract_old_logic_alias_inline_rewrite`](autodeduct-support/micro-tests/helper_inference/contract_old_logic_alias_inline_rewrite.c) | Partial inline reduction of the old-state alias pair | Functional boundary | Same TriCera parser error: `func_backend_parser` | Later control: 12/12 |
+| [`helper_missing_forward_declaration`](autodeduct-support/micro-tests/helper_inference/helper_missing_forward_declaration.c) | Helper call before a prototype | Input-compatibility boundary | Missing inferred contract block: `func_backend_output` | Later control: 11/11 |
 
 The case identifier `helper_array_struct_output_parameter_rewrite` is retained for frozen evidence compatibility. The current source returns one scalar field; it does not use an output parameter.
 
@@ -74,6 +77,8 @@ The case identifier `helper_array_struct_output_parameter_rewrite` is retained f
 - The tested logic-function and predicate rewrites pass after inlining the exact expressions used by the probes. This is not a claim that arbitrary ACSL definitions can always be eliminated safely.
 - The tested behavior rewrite preserves the two conditional postconditions used by that probe. It is not a general equivalence result for arbitrary ACSL behaviors.
 - Fixed-index and array/struct reductions simplify the programs but do not establish complete support.
+- The old-state logic-alias pair does not establish a workaround: the partial inline rewrite keeps the functional parser boundary.
+- The missing-forward-declaration probe is an input-compatibility test, not a general claim about valid modern C helper support.
 
 ## Main conclusions
 
@@ -87,3 +92,5 @@ The case identifier `helper_array_struct_output_parameter_rewrite` is retained f
 
 - [`academic-functional-v3.json`](autodeduct-support-results/academic-functional-v3.json)
 - [`academic-rte-v3.json`](autodeduct-support-results/academic-rte-v3.json)
+
+The three added probes form two issue families rather than a complete root-cause isolation. The old-state alias pair is not yet a fully minimal root-cause isolation, and no successful workaround is established. The forward-declaration source is not valid modern C without a prototype, so helper prototypes are a current input requirement; a corrected companion probe is future work. Conclusions apply only to these frozen inputs and named profiles.

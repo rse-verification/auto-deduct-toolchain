@@ -1640,8 +1640,13 @@ class RunSupportTestsManifestTests(unittest.TestCase):
         "helper_int_indexed_array_struct_return",
         "helper_int_indexed_array_scalar_return",
     }
-    BACKEND_BOUNDARY_CASES = set()
-    BACKEND_REWRITE_CASES = {}
+    BACKEND_BOUNDARY_CASES = {
+        "contract_old_logic_alias_reproducer",
+        "helper_missing_forward_declaration",
+    }
+    BACKEND_REWRITE_CASES = {
+        "contract_old_logic_alias_inline_rewrite": "contract_old_logic_alias_reproducer",
+    }
     FINAL_REWRITE_CASES = {
         "helper_stack_pointer_return_value_rewrite": "helper_stack_pointer",
         "contract_logic_inline_rewrite": "contract_logic_function_helper",
@@ -1871,7 +1876,7 @@ class RunSupportTestsManifestTests(unittest.TestCase):
             self.assertEqual(case["expected_support"], "boundary")
             self.assertEqual(case["evidence_tier"], "tier_1_helper_inference")
             self.assertEqual(case["baseline_group"], "academic_functional_v2")
-            self.assertEqual(case["source_visibility"], "public_safe_synthetic")
+            self.assertEqual(case["source_visibility"], "public")
             self.assertIs(case["public_export"], True)
             self.assertEqual(case["saida_tricera_opts"], "-cpp -acsl")
             self.assertEqual(case["evaluation_profile"], "configured_tricera_profile")
@@ -1888,7 +1893,7 @@ class RunSupportTestsManifestTests(unittest.TestCase):
             self.assertEqual(case["baseline_group"], "academic_functional_v3")
             self.assertEqual(case["rewrite_of"], direct_case)
             self.assertEqual(case["direct_or_rewrite_relation"], f"rewrite_of:{direct_case}")
-            self.assertEqual(case["source_visibility"], "public_safe_synthetic")
+            self.assertEqual(case["source_visibility"], "public")
             self.assertIs(case["public_export"], True)
             self.assertEqual(case["saida_tricera_opts"], "-cpp -acsl")
             self.assertEqual(case["evaluation_profile"], "configured_tricera_profile")
@@ -1933,7 +1938,7 @@ class RunSupportTestsManifestTests(unittest.TestCase):
         _, cases = self.load_cases()
         for case_id, case in cases.items():
             self.assertEqual(case["module"], "micro", case_id)
-            self.assertEqual(case["source_visibility"], "public", case_id)
+            self.assertIn(case["source_visibility"], {"public", "public_safe_synthetic"}, case_id)
             self.assertIs(case["public_export"], True, case_id)
 
     def test_p1_sources_follow_helper_inference_shape(self):

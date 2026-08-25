@@ -1,6 +1,6 @@
 # AutoDeduct Public Support Probes
 
-This directory contains public-safe C/ACSL probes for the AutoDeduct helper-inference pipeline. The probes test exact program patterns under a named tool version and command profile. They do not define universal support for a complete C or ACSL feature, and they contain no industrial case-study source.
+This directory contains public-safe C/ACSL probes for the AutoDeduct helper-inference pipeline. The probes test exact program patterns under a named tool version and command profile. The public v3 corpus has 34 source probes. Three newly published probes cover two issue families: an old-state logic-alias direct probe with a partial inline rewrite, and a missing helper forward-declaration probe. They do not define universal support for a complete C or ACSL feature, and they contain no industrial case-study source.
 
 Start with [`../MICRO_RESULTS.md`](../MICRO_RESULTS.md) for the source-linked result table.
 
