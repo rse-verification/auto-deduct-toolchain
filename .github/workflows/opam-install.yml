@@ -1,0 +1,107 @@
+name: OPAM installation
+
+on:
+  push:
+    paths:
+      - 'opam/versions.env'
+      - 'scripts/install-with-opam.sh'
+      - 'scripts/check-opam-installation.sh'
+      - 'docs/OPAM_INSTALL.md'
+      - 'Dockerfiles/AutoDeductDockerfile'
+      - 'Dockerfiles/OpamInstallTestDockerfile'
+      - 'Dockerfiles/bin/**'
+      - 'tests/contract-assistant/**'
+      - 'README.md'
+      - '.github/workflows/opam-install.yml'
+  pull_request:
+    paths:
+      - 'opam/versions.env'
+      - 'scripts/install-with-opam.sh'
+      - 'scripts/check-opam-installation.sh'
+      - 'docs/OPAM_INSTALL.md'
+      - 'Dockerfiles/AutoDeductDockerfile'
+      - 'Dockerfiles/OpamInstallTestDockerfile'
+      - 'Dockerfiles/bin/**'
+      - 'tests/contract-assistant/**'
+      - 'README.md'
+      - '.github/workflows/opam-install.yml'
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Check Bash syntax
+        run: |
+          bash -n scripts/install-with-opam.sh
+          bash -n scripts/check-opam-installation.sh
+
+      - name: Install ShellCheck
+        run: sudo apt-get update && sudo apt-get install --yes shellcheck
+
+      - name: Run ShellCheck
+        run: |
+          shellcheck -x \
+            scripts/install-with-opam.sh \
+            scripts/check-opam-installation.sh
+
+      - name: Check metadata and whitespace
+        run: |
+          bash scripts/install-with-opam.sh --dry-run
+          git diff --check
+
+      - name: Run checker self-tests
+        run: |
+          bash scripts/check-opam-installation.sh --self-test-cleanup
+          bash scripts/check-opam-installation.sh --self-test-parser
+          bash scripts/check-opam-installation.sh --self-test-wp-result
+          bash scripts/check-opam-installation.sh --self-test-backend-errors
+          bash scripts/check-opam-installation.sh --self-test-phase-status
+
+      - name: Build test image without cache
+        id: build-image
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          docker build --no-cache \
+            --file Dockerfiles/OpamInstallTestDockerfile \
+            --tag autodeduct-opam-test . 2>&1 | tee opam-build.log
+
+      - name: Upload Docker build log after failure
+        if: failure() && steps.build-image.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: opam-build-log
+          path: opam-build.log
+          if-no-files-found: error
+
+      - name: Run test image
+        id: run-image
+        shell: bash
+        run: |
+          set +e
+          docker run --name autodeduct-opam-test-run autodeduct-opam-test \
+            bash -lc 'set -Eeuo pipefail
+          cd /workspace
+          bash scripts/check-opam-installation.sh --quick
+          bash scripts/check-opam-installation.sh --full
+          bash scripts/install-with-opam.sh --skip-system-deps --yes
+          bash scripts/check-opam-installation.sh --quick' > opam-install.log 2>&1
+          status=$?
+          docker rm autodeduct-opam-test-run >/dev/null 2>&1 || true
+          exit "${status}"
+
+      - name: Upload installation log after failure
+        if: failure() && steps.run-image.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: opam-install-log
+          path: opam-install.log
+          if-no-files-found: error

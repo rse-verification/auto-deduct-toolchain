@@ -1,0 +1,39 @@
+# syntax=docker/dockerfile:1
+
+FROM ubuntu:24.04
+
+ARG TEST_USER=autodeduct
+ARG TEST_UID=2000
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV HOME=/home/${TEST_USER}
+
+# sudo is only used to let the installer test its system-dependency path.
+RUN apt-get update \
+  && apt-get install --yes --no-install-recommends sudo ca-certificates \
+  && useradd --create-home --uid "${TEST_UID}" --shell /usr/bin/bash "${TEST_USER}" \
+  && printf '%s ALL=(ALL) NOPASSWD:ALL\n' "${TEST_USER}" > "/etc/sudoers.d/${TEST_USER}" \
+  && chmod 0440 "/etc/sudoers.d/${TEST_USER}" \
+  && rm -rf /var/lib/apt/lists/*
+
+COPY --chown=${TEST_USER}:${TEST_USER} opam/versions.env /workspace/opam/versions.env
+COPY --chown=${TEST_USER}:${TEST_USER} scripts/install-with-opam.sh /workspace/scripts/install-with-opam.sh
+COPY --chown=${TEST_USER}:${TEST_USER} Dockerfiles/AutoDeductDockerfile /workspace/Dockerfiles/AutoDeductDockerfile
+COPY --chown=${TEST_USER}:${TEST_USER} Dockerfiles/bin/autodeduct-contract-assistant /workspace/Dockerfiles/bin/autodeduct-contract-assistant
+COPY --chown=${TEST_USER}:${TEST_USER} Dockerfiles/bin/autodeduct-contract-assistant-gui /workspace/Dockerfiles/bin/autodeduct-contract-assistant-gui
+COPY --chown=${TEST_USER}:${TEST_USER} Dockerfiles/bin/autodeduct_contract_assistant_draft.py /workspace/Dockerfiles/bin/autodeduct_contract_assistant_draft.py
+COPY --chown=${TEST_USER}:${TEST_USER} Dockerfiles/bin/autodeduct_contract_assistant_framac.py /workspace/Dockerfiles/bin/autodeduct_contract_assistant_framac.py
+COPY --chown=${TEST_USER}:${TEST_USER} Dockerfiles/bin/autodeduct_contract_assistant_openai.py /workspace/Dockerfiles/bin/autodeduct_contract_assistant_openai.py
+COPY --chown=${TEST_USER}:${TEST_USER} Dockerfiles/bin/autodeduct_contract_assistant_project.py /workspace/Dockerfiles/bin/autodeduct_contract_assistant_project.py
+
+USER ${TEST_USER}
+WORKDIR /workspace
+
+RUN bash scripts/install-with-opam.sh --install-system-deps --yes --disable-opam-sandboxing
+COPY --chown=${TEST_USER}:${TEST_USER} scripts/check-opam-installation.sh /workspace/scripts/check-opam-installation.sh
+RUN bash scripts/check-opam-installation.sh --quick
+RUN bash scripts/check-opam-installation.sh --full
+RUN bash scripts/install-with-opam.sh --install-system-deps --yes --disable-opam-sandboxing
+RUN bash scripts/check-opam-installation.sh --quick
+
+CMD ["bash", "-lc", "bash scripts/check-opam-installation.sh --quick"]

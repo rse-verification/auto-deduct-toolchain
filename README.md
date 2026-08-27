@@ -52,6 +52,26 @@ Please note that building the container can take quite a while since
 a lot of OCAML modules for Frama-C are built from source during
 the container build.
 
+## OPAM installation
+
+The reproducible user installation is documented in
+[docs/OPAM_INSTALL.md](docs/OPAM_INSTALL.md). It supports Ubuntu 24.04 and
+Ubuntu under WSL2. Native Windows and macOS are not supported by this path.
+
+From the repository root, run:
+
+```shell
+bash scripts/install-with-opam.sh --install-system-deps --yes
+source "$HOME/.local/share/autodeduct/env.sh"
+bash scripts/check-opam-installation.sh --quick
+```
+
+The full paper-model smoke test is:
+
+```shell
+bash scripts/check-opam-installation.sh --full
+```
+
 ## Container contents
 
 All tools and source code are installed in the container to be used by
