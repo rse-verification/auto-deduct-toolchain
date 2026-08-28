@@ -66,8 +66,8 @@ Build from the repository root. This is important because the Dockerfile
 copies the CLI from the top-level `bin/` directory.
 
 ```shell
-git clone https://github.com/rse-verification/auto-deduct-toolchain.git
-cd auto-deduct-toolchain
+git clone https://github.com/rse-verification/auto-deduct.git
+cd auto-deduct
 docker build \
   -t auto-deduct:1.0.0 \
   -t auto-deduct:latest \
