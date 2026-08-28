@@ -479,7 +479,7 @@ run_cleanup_self_test_case() (
   local mode=$2
   local expected_status=$3
 
-  # shellcheck disable=SC2329
+  # shellcheck disable=SC2317,SC2329
   cleanup_self_test_case() {
     local status=$?
     trap - EXIT
@@ -513,7 +513,7 @@ run_cleanup_self_test() (
   local failure_status
   local empty_output
 
-  # shellcheck disable=SC2329
+  # shellcheck disable=SC2317,SC2329
   cleanup_self_test_parent() {
     local status=$?
     trap - EXIT
@@ -572,7 +572,7 @@ run_parser_self_test() (
     die "TMPDIR must be absolute for the parser self-test"
   fi
 
-  # shellcheck disable=SC2329
+  # shellcheck disable=SC2317,SC2329
   cleanup_parser_self_test() {
     local status=$?
     trap - EXIT
@@ -629,7 +629,7 @@ run_wp_result_self_test() (
     die "TMPDIR must be absolute for the WP-result self-test"
   fi
 
-  # shellcheck disable=SC2329
+  # shellcheck disable=SC2317,SC2329
   cleanup_wp_result_self_test() {
     local status=$?
     trap - EXIT
@@ -695,7 +695,7 @@ run_backend_error_self_test() (
     die "TMPDIR must be absolute for the backend-error self-test"
   fi
 
-  # shellcheck disable=SC2329
+  # shellcheck disable=SC2317,SC2329
   cleanup_backend_error_self_test() {
     local status=$?
     trap - EXIT
@@ -743,7 +743,7 @@ run_phase_status_case() (
   local test_parent="${TMPDIR:-/tmp}"
   local actual_status
 
-  # shellcheck disable=SC2329
+  # shellcheck disable=SC2317,SC2329
   cleanup_phase_status_self_test() {
     local status=$?
     trap - EXIT
@@ -764,7 +764,7 @@ run_phase_status_case() (
   trap cleanup_phase_status_self_test EXIT
 
   test_dir="$(mktemp -d "${test_parent}/autodeduct-phase-status-self-test.XXXXXX")"
-  # shellcheck disable=SC2329
+  # shellcheck disable=SC2317,SC2329
   phase_status_command() {
     return "$1"
   }
@@ -815,7 +815,7 @@ run_full_check() (
   local work=""
   local work_parent="${prefix}"
   work="$(mktemp -d "${work_parent}/.paper-smoke.XXXXXX")"
-  # shellcheck disable=SC2329
+  # shellcheck disable=SC2317,SC2329
   cleanup_full_check() {
     local status=$?
     trap - EXIT
@@ -837,7 +837,7 @@ run_full_check() (
   parse_source "Original paper input" "${input_file}" "${work}/parse.log" "${work}/tmp"
   assert_original_profile "${input_file}"
 
-  # shellcheck disable=SC2329
+  # shellcheck disable=SC2317,SC2329
   run_saida_phase() {
     TMPDIR="${work}/tmp" opam_exec frama-c "${profile_args[@]}" \
       -autoload-plugins -saida -saida-keep-tmp \
@@ -854,7 +854,7 @@ run_full_check() (
   assert_inferred_helpers "${saida_file}"
   parse_source "Generated Saida source" "${saida_file}" "${work}/saida-parse.log" "${work}/tmp"
 
-  # shellcheck disable=SC2329
+  # shellcheck disable=SC2317,SC2329
   run_isp_phase() {
     TMPDIR="${work}/tmp" opam_exec frama-c "${profile_args[@]}" \
       -autoload-plugins -isp -isp-entry-point main \
@@ -869,7 +869,7 @@ run_full_check() (
   (( isp_assigns > saida_assigns )) || die "ISP did not add auxiliary annotations"
   parse_source "Generated ISP source" "${isp_file}" "${work}/isp-parse.log" "${work}/tmp"
 
-  # shellcheck disable=SC2329
+  # shellcheck disable=SC2317,SC2329
   run_wp_phase() {
     TMPDIR="${work}/tmp" WHY3CONFIG="${WHY3_CONFIG}" opam_exec frama-c "${profile_args[@]}" \
       -wp -wp-prover "${wp_provers}" "${isp_file}"

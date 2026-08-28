@@ -1,3 +1,28 @@
+## OPAM-based installation
+
+AutoDeduct can be installed on Ubuntu 24.04 and Ubuntu under WSL2 with an isolated OPAM switch.
+
+```bash
+git clone https://github.com/rse-verification/auto-deduct-toolchain.git
+cd auto-deduct-toolchain
+
+scripts/install-with-opam.sh \
+  --install-system-deps \
+  --yes
+
+source "$HOME/.local/share/autodeduct/env.sh"
+
+scripts/check-opam-installation.sh --quick
+scripts/check-opam-installation.sh --full
+```
+
+The installer pins the tested Frama-C, Saida, ISP, TriCera, and example revisions. The full check runs the paper artifact profile, verifies five inferred helper contracts, runs ISP, and requires WP to prove 236/236 goals.
+
+OPAM manages the OCaml components. TriCera and the external provers are installed and checked by the installer. Native Windows and macOS are not supported by this installation path.
+
+See [`docs/OPAM_INSTALL.md`](docs/OPAM_INSTALL.md) for prerequisites, proxy settings, cleanup, CI validation, and known limitations.
+
+
 # auto-deduct-toolchain
 
 This is a project for composing a formal verification toolchain using
