@@ -13,11 +13,13 @@ boundaries, and two incomplete WP cases. The remaining assessment rows are
 still historical evidence until they receive their own current expected-outcome
 tests.
 
-This report uses four states:
+This report uses five states:
 
 | State | Meaning |
 | --- | --- |
 | Confirmed component support | The relevant current component was rebuilt and its focused regression test passed. |
+| Confirmed end to end | The original assessment source completed parse, inference, ISP/Eva, reachable-contract checking, and WP. |
+| Partial pipeline support | Translation and contract checking completed, but final WP did not prove every goal. |
 | Historical pass | The assessment PDF reported a complete successful chain, but the test has not yet been rerun against the final image. |
 | Safe limitation | The tool reports a clear limitation rather than claiming a complete inferred contract. |
 | Open or unverified | The case is not fixed end to end, or current evidence is insufficient to claim that it is fixed. |
@@ -26,13 +28,14 @@ This report uses four states:
 
 | Component | Revision checked | Result |
 | --- | --- | --- |
-| AutoDeduct | `auto-deduct` at `df85ac8`, plus the current warning-handling change | The existing Docker toolchain ran the mounted working-tree CLI successfully. |
-| TriCera | upstream master `96042c2` | Built successfully inside the new AutoDeduct image. |
-| Saida | `v0.5.0` | Built as part of the image. |
-| ISP | master `a538c4e` | Built as part of the image; its ptest suite passed. |
+| AutoDeduct | `auto-deduct` at `a29b9fa` | The mounted V1 CLI ran the original assessment sources. |
+| TriCera | upstream master `96042c2427428907e2d82914b2651a470a80a6f1` | Used by the mounted candidate run. |
+| Saida base image | `8634950e174995e59412b1f19b6200a00f74fd1d` | Base installed in `auto-deduct:saida-logic-check`. |
+| Saida candidate stack | `870a275` on `45f9a35`, `30839dc`, and `97c6662` | Mounted, built, and installed inside the verification container before each candidate run. |
+| ISP | master `a538c4e1ec5014fe45dd6e898c0aa5b4be739efa` | Used by the mounted candidate run. |
 
-The updated Docker image proves that the component versions are compatible at
-build time. It does not by itself prove every microtest end to end.
+The mounted candidate run proves that these component revisions are compatible
+for the listed end-to-end cases. It does not by itself prove every microtest.
 
 ## Fresh pipeline evidence
 
@@ -51,6 +54,22 @@ existing `auto-deduct:tricera-master-96042` image:
 reachable-contract check and WP. A complete WP proof with no missing reachable
 contracts is still required for a successful result. This avoids discarding a
 valid proof merely because an optional auxiliary annotation was not generated.
+
+### Native ACSL contract recheck with the Saida candidate stack
+
+The original, unchanged assessment sources on
+`autodeduct-support-microtests` were run through the mounted AutoDeduct V1 CLI.
+For every run, the candidate Saida worktree was built and installed inside the
+container before invoking `autodeduct`, so the full path was exercised:
+Saida/TriCera -> ISP/Eva -> reachable-contract check -> WP.
+
+| Original source | Observed outcome | Interpretation |
+| --- | --- | --- |
+| `contract_predicate_helper.c` | Passed end to end; no missing reachable contracts; WP passed. | The restricted pure-predicate implementation fixes this native predicate case. `ISP-W001` and the preserved-`assigns` warning remain visible, but WP closes the proof. |
+| `contract_behavior_helper.c` | Passed end to end; no missing reachable contracts; WP passed. | Native named behavior `assumes` and `ensures` are preserved through the complete pipeline. |
+| `contract_logic_function_helper.c` | Saida/TriCera, ISP/Eva, and reachable-contract check passed; WP proved `17 / 18`. | The term-valued logic function is translated successfully. The remaining `typed_entry_requires` goal timed out with default Alt-Ergo, Alt-Ergo at 30 seconds, and Z3, so this is not a confirmed full proof yet. |
+| `contract_old_logic_alias_reproducer.c` | Saida stops with `[SAIDA-E001]` before TriCera. | Correct safe limitation: global ACSL logic aliases with formal state labels are outside the supported reducer subset. |
+| `contract_old_logic_alias_inline_rewrite.c` | Saida stops with the same `[SAIDA-E001]`. | Inlining the struct-valued alias alone does not help because `rememberedAlias` remains a global ACSL logic alias. This is not the same construct as a local `\let` alias. |
 
 ## Microtest status by pattern
 
@@ -74,9 +93,10 @@ valid proof merely because an optional auxiliary annotation was not generated.
 | Dynamic global-array update | Open or unverified | The PDF left two WP goals unresolved. A fixed-index rewrite is evidence about a changed input, not a general tool fix. |
 | Valid pointer store | Open | The experimental TriCera fork branch is not in upstream master and has not been integrated into AutoDeduct. |
 | Entry local stack pointer | Open | A rewrite exists in the assessment corpus, but the original interface shape has not been freshly verified end to end. |
-| ACSL logic function | Open | The ISP logic-definition branch only avoids a plugin warning for defined logic bodies. It does not solve Saida/TriCera inference for all logic functions. |
-| ACSL behavior contract | Open | The documented plain-ensures rewrite is a changed input, not native behavior-contract support. |
-| ACSL predicate | Open | The documented inline rewrite is a changed input, not native predicate support. |
+| ACSL logic function | Partial pipeline support | The original `contract_logic_function_helper.c` now passes Saida/TriCera, ISP/Eva, and the reachable-contract check with no missing contracts. WP proves `17 / 18`; the remaining `typed_entry_requires` goal also timed out with Alt-Ergo at 30 seconds and with Z3. |
+| ACSL behavior contract | Confirmed end to end | The unchanged `contract_behavior_helper.c` passes the full pipeline. The new Saida behavior-aware processing preserves native behavior `assumes` and `ensures`; no plain-ensures rewrite is required. |
+| ACSL predicate | Confirmed end to end | The unchanged `contract_predicate_helper.c` passes the full pipeline. The new Saida typed-AST predicate expansion handles this pure predicate definition without requiring an inline rewrite. |
+| ACSL global logic alias under `\old` | Safe limitation | Both original alias sources stop before TriCera with `[SAIDA-E001]` rather than being unsafely reduced. The separate local `\let` alias fix does not cover global ACSL logic declarations with state labels. |
 | Persistent local static state | Confirmed incomplete-WP boundary | Current V1 regression reports the missing `next_count` contract and incomplete WP proof. Model the state explicitly in a reviewed contract. |
 | Floating-point arithmetic | Confirmed safe functional boundary | Current V1 regression reports that TriCera does not support `float` and rejects the fallback. |
 | Pointer arithmetic | Confirmed safe functional boundary | Current V1 regression stops at TriCera's functional-input syntax boundary. |
@@ -111,8 +131,11 @@ supported.
 ## Recommended next step
 
 The twelve categorized public cases are now copied into the final AutoDeduct
-repository as Docker integration regressions. Expand the suite with the
-remaining public assessment corpus, with one expected outcome per test:
+repository as Docker integration regressions. Add the three rerun native ACSL
+sources with their observed outcomes: complete success for behavior and
+predicate definitions, and an expected incomplete WP result for the logic
+function case. Expand the suite with the remaining public assessment corpus,
+with one expected outcome per test:
 
 * complete success with proof-goal count;
 * expected safe limitation and diagnostic code; or
